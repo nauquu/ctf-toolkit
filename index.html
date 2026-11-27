@@ -193,6 +193,7 @@
         <button class="tab" role="tab" aria-selected="false" data-tab="conv">Chuyển đổi</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="rsa">Giải mã RSA</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="stego">Giải mã ảnh</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="cupp">CUPP · Tạo wordlist</button>
       </nav>
 
       <!-- ================= JWT WORKBENCH ================= -->
@@ -673,6 +674,153 @@
             <label class="flabel" style="margin-top:12px;">Chuỗi in được bên trong dòng LSB</label>
             <div class="strings-box" id="st-lsb-strings" style="max-height:260px;">—</div>
           </div>
+        </div>
+      </section>
+
+      <!-- ================= CUPP / TẠO WORDLIST THEO HỒ SƠ ================= -->
+      <section class="panel" id="panel-cupp" role="tabpanel">
+        <h2>CUPP — Tạo wordlist theo hồ sơ</h2>
+        <p class="lede">Bản port chạy trong trình duyệt của <a href="https://github.com/Mebus/cupp" target="_blank" rel="noopener" style="color:var(--accent);">CUPP (Common User Passwords Profiler)</a> — công cụ sinh từ điển mật khẩu từ thông tin cá nhân của một người: tên, ngày sinh, tên bạn đời / con / thú cưng, công ty, từ khoá riêng. Trang này bám đúng thuật toán của <span class="mono">cupp.py</span>: chế độ <span class="mono">-i</span> (hỏi hồ sơ rồi sinh) và <span class="mono">-w</span> (nâng cấp một wordlist có sẵn), với các mặc định lấy từ <span class="mono">cupp.cfg</span> — năm 1990–2022, ký tự đặc biệt <span class="mono">! @ '#' $ % &amp; *</span> (đúng các token cupp.cfg định nghĩa — kể cả token <span class="mono">'#'</span> nguyên dấu nháy, hệ quả của cách file cấu hình được đọc), số 0–100, leet <span class="mono">a→4 i→1 e→3 t→7 o→0 s→5 g→9 z→2</span>, lọc độ dài &gt;5 và &lt;12. Mọi thứ sinh ngay trên máy bạn, không gửi đi đâu.</p>
+
+        <div class="card">
+          <h3>Chế độ</h3>
+          <label class="flabel" for="cupp-mode">Kiểu sinh wordlist</label>
+          <select id="cupp-mode">
+            <option value="profile" selected>Từ hồ sơ cá nhân — tương đương cupp.py -i</option>
+            <option value="improve">Nâng cấp wordlist có sẵn — tương đương cupp.py -w</option>
+          </select>
+        </div>
+
+        <div id="cupp-profile-box">
+          <div class="cols2">
+            <div class="col-stack">
+              <div class="card">
+                <h3>Người chính (bắt buộc ít nhất tên)</h3>
+                <label class="flabel" for="cupp-name">Tên (First Name)</label>
+                <input type="text" id="cupp-name" class="mono" autocomplete="off" placeholder="ví dụ: john" />
+                <label class="flabel" for="cupp-surname" style="margin-top:12px;">Họ (Surname)</label>
+                <input type="text" id="cupp-surname" class="mono" autocomplete="off" placeholder="ví dụ: doe" />
+                <label class="flabel" for="cupp-nick" style="margin-top:12px;">Biệt danh (Nickname)</label>
+                <input type="text" id="cupp-nick" class="mono" autocomplete="off" placeholder="ví dụ: johny" />
+                <label class="flabel" for="cupp-birth" style="margin-top:12px;">Ngày sinh (DDMMYYYY)</label>
+                <input type="text" id="cupp-birth" class="mono" autocomplete="off" inputmode="numeric" placeholder="ví dụ: 15081990 — đúng 8 chữ số, để trống nếu không biết" />
+              </div>
+
+              <div class="card">
+                <h3>Bạn đời (Partner)</h3>
+                <label class="flabel" for="cupp-wife">Tên bạn đời</label>
+                <input type="text" id="cupp-wife" class="mono" autocomplete="off" placeholder="ví dụ: jane" />
+                <label class="flabel" for="cupp-wifen" style="margin-top:12px;">Biệt danh bạn đời</label>
+                <input type="text" id="cupp-wifen" class="mono" autocomplete="off" placeholder="ví dụ: janie" />
+                <label class="flabel" for="cupp-wifeb" style="margin-top:12px;">Ngày sinh bạn đời (DDMMYYYY)</label>
+                <input type="text" id="cupp-wifeb" class="mono" autocomplete="off" inputmode="numeric" placeholder="8 chữ số, để trống nếu không biết" />
+              </div>
+            </div>
+
+            <div class="col-stack">
+              <div class="card">
+                <h3>Con (Child)</h3>
+                <label class="flabel" for="cupp-kid">Tên con</label>
+                <input type="text" id="cupp-kid" class="mono" autocomplete="off" placeholder="ví dụ: bob" />
+                <label class="flabel" for="cupp-kidn" style="margin-top:12px;">Biệt danh của con</label>
+                <input type="text" id="cupp-kidn" class="mono" autocomplete="off" placeholder="ví dụ: bobby" />
+                <label class="flabel" for="cupp-kidb" style="margin-top:12px;">Ngày sinh của con (DDMMYYYY)</label>
+                <input type="text" id="cupp-kidb" class="mono" autocomplete="off" inputmode="numeric" placeholder="8 chữ số, để trống nếu không biết" />
+              </div>
+
+              <div class="card">
+                <h3>Khác</h3>
+                <label class="flabel" for="cupp-pet">Tên thú cưng (Pet)</label>
+                <input type="text" id="cupp-pet" class="mono" autocomplete="off" placeholder="ví dụ: rex" />
+                <label class="flabel" for="cupp-company" style="margin-top:12px;">Tên công ty (Company)</label>
+                <input type="text" id="cupp-company" class="mono" autocomplete="off" placeholder="ví dụ: acme" />
+                <label class="flabel" for="cupp-words" style="margin-top:12px;">Từ khoá riêng về người này (cách nhau bằng dấu phẩy, khoảng trắng sẽ bị xoá — như bản gốc)</label>
+                <input type="text" id="cupp-words" class="mono" autocomplete="off" placeholder="ví dụ: hacker,juice,black" />
+                <p class="seg-note">Đúng như bản gốc: mọi trường đều được hạ về chữ thường, và trang tự thêm biến thể viết hoa chữ đầu (John, Doe…) cùng dạng đảo ngược (nhoj…) vào quá trình tổ hợp.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="cupp-improve-box" style="display:none;">
+          <div class="card">
+            <h3>Wordlist gốc cần nâng cấp</h3>
+            <div class="btnrow" style="margin:0 0 10px;">
+              <button class="btn" id="cupp-imp-file-btn" type="button">Nạp file wordlist…</button>
+              <input class="hidden-input" type="file" id="cupp-imp-file" accept=".txt,.list,.dic,text/plain" />
+            </div>
+            <label class="flabel" for="cupp-imp-text">Hoặc dán các từ gốc (mỗi dòng một từ, hoặc cách nhau bằng khoảng trắng — bản gốc tách theo khoảng trắng)</label>
+            <textarea class="mono" id="cupp-imp-text" rows="8" spellcheck="false" placeholder="football&#10;dragon&#10;sunshine"></textarea>
+            <div class="status dim" id="cupp-imp-status">Chưa có từ gốc nào.</div>
+            <label class="checkline">
+              <input type="checkbox" id="cupp-imp-concat" />
+              Ghép mọi từ với mọi từ (concatenate) — bản gốc cảnh báo: N từ sinh N×N tổ hợp, trên 200 từ là đã nặng (threshold trong cupp.cfg)
+            </label>
+          </div>
+        </div>
+
+        <div class="cols2" style="margin-top:16px;">
+          <div class="card">
+            <h3>Tuỳ chọn sinh (các câu hỏi Y/N của bản gốc)</h3>
+            <label class="checkline">
+              <input type="checkbox" id="cupp-specs" />
+              Thêm ký tự đặc biệt vào cuối từ (mọi tổ hợp 1–3 ký tự)
+            </label>
+            <label class="checkline">
+              <input type="checkbox" id="cupp-randnum" checked />
+              Thêm số vào cuối từ
+            </label>
+            <label class="checkline">
+              <input type="checkbox" id="cupp-leet" />
+              Leet mode (leet → 1337): nhân đôi danh sách bằng biến thể leet
+            </label>
+            <label class="checkline">
+              <input type="checkbox" id="cupp-lenfilter" checked />
+              Lọc độ dài kiểu cupp.cfg (chỉ giữ từ dài hơn wcfrom và ngắn hơn wcto)
+            </label>
+            <p class="seg-note">Cách CUPP tổ hợp, tóm tắt: mỗi nhóm tên (người chính / bạn đời / con) tự ghép đôi với nhau, rồi ghép tiếp với mọi mảnh ngày sinh (yy, yyyy, dd, mm và các tổ hợp 2–3 mảnh, có và không có dấu <span class="mono">_</span>), với từng năm trong danh sách năm, với số chạy và với ký tự đặc biệt; từ khoá, thú cưng, công ty và tên đảo ngược cũng đi qua cùng các phép ghép đó.</p>
+          </div>
+
+          <div class="card">
+            <h3>Cấu hình (mặc định = cupp.cfg)</h3>
+            <label class="flabel" for="cupp-years">Danh sách năm (cách nhau bằng dấu phẩy)</label>
+            <textarea class="mono" id="cupp-years" rows="3" spellcheck="false">1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022</textarea>
+            <label class="flabel" for="cupp-chars" style="margin-top:12px;">Ký tự đặc biệt (các token cách nhau bằng dấu phẩy, đúng định dạng cupp.cfg)</label>
+            <input type="text" id="cupp-chars" class="mono" autocomplete="off" value="!,@,'#',$,%,&amp;,*" />
+            <p class="seg-note">Token <span class="mono">'#'</span> giữ nguyên cả dấu nháy như bản gốc: trong cupp.cfg nó được ghi là <span class="mono">'#'</span> và chương trình đọc thẳng token đó vào danh sách ký tự đặc biệt. Muốn dùng ký tự <span class="mono">#</span> trần thì sửa token thành <span class="mono">#</span>.</p>
+            <div class="grid2" style="gap:12px; margin-top:12px;">
+              <div>
+                <label class="flabel" for="cupp-numfrom">Số bắt đầu (from)</label>
+                <input type="text" id="cupp-numfrom" class="mono" autocomplete="off" inputmode="numeric" value="0" />
+              </div>
+              <div>
+                <label class="flabel" for="cupp-numto">Số kết thúc (to, không gồm số này — range của Python)</label>
+                <input type="text" id="cupp-numto" class="mono" autocomplete="off" inputmode="numeric" value="100" />
+              </div>
+              <div>
+                <label class="flabel" for="cupp-wcfrom">wcfrom — giữ từ dài hơn</label>
+                <input type="text" id="cupp-wcfrom" class="mono" autocomplete="off" inputmode="numeric" value="5" />
+              </div>
+              <div>
+                <label class="flabel" for="cupp-wcto">wcto — giữ từ ngắn hơn</label>
+                <input type="text" id="cupp-wcto" class="mono" autocomplete="off" inputmode="numeric" value="12" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <h3>Kết quả</h3>
+          <div class="btnrow" style="margin-top:0;">
+            <button class="btn primary" id="cupp-gen" type="button">Tạo wordlist</button>
+            <button class="btn" id="cupp-download" type="button" disabled>Tải file .txt</button>
+            <button class="btn" id="cupp-copy" type="button" disabled>Sao chép</button>
+            <button class="btn" id="cupp-tocrack" type="button" disabled>Đưa sang tab Dò hash</button>
+          </div>
+          <div class="status dim" id="cupp-status">Điền hồ sơ rồi bấm “Tạo wordlist”. Kết quả được khử trùng lặp và sắp xếp A→Z, đúng như file CUPP ghi ra.</div>
+          <label class="flabel" for="cupp-out" style="margin-top:12px;">Wordlist đã tạo — <span id="cupp-count">0</span> từ</label>
+          <textarea class="mono" id="cupp-out" rows="14" readonly spellcheck="false" placeholder="Wordlist sẽ hiện ở đây…"></textarea>
+          <p class="seg-note">File tải về ở chế độ hồ sơ được đặt tên <span class="mono">&lt;tên&gt;.txt</span> như bản gốc; ở chế độ nâng cấp là <span class="mono">wordlist.cupp.txt</span>. Wordlist lớn (trên 100.000 từ) chỉ hiển thị 100.000 dòng đầu ở ô trên — nút tải và nút đưa sang Dò hash vẫn dùng toàn bộ danh sách.</p>
         </div>
       </section>
 
@@ -2317,6 +2465,337 @@ function sha512Bytes(msg){
       stringsEl.textContent = lsbStrings.slice(0, 500).join("\n") + (lsbStrings.length > 500 ? "\n… (chỉ hiện 500 chuỗi đầu)" : "") || "(không có chuỗi in được nào trong dòng LSB)";
       scanFlagInStego();
     }
+
+    /* ============================================================
+       CUPP — port của cupp.py (Mebus/cupp) chạy trong trình duyệt.
+       generate_wordlist_from_profile() và improve_dictionary()
+       được dịch lại theo đúng thuật toán gốc: mảnh ngày sinh,
+       ghép đôi tên, ghép với năm / số / ký tự đặc biệt (có và
+       không có "_"), tên đảo ngược, leet, lọc độ dài wcfrom/wcto.
+       ============================================================ */
+    var CUPP_LEET = { a: "4", i: "1", e: "3", t: "7", o: "0", s: "5", g: "9", z: "2" };
+    function cuppLeet(x) {
+      return x.replace(/[a-z]/g, function (ch) { return CUPP_LEET[ch] || ch; });
+    }
+    function cuppTitle(s) {
+      // str.title() của Python trên chuỗi đã hạ chữ thường
+      return s.replace(/(^|[\s_\-])(\S)/g, function (m, p, c) { return p + c.toUpperCase(); });
+    }
+    function cuppRev(s) { return s.split("").reverse().join(""); }
+    function cuppUniq(arr) {
+      var seen = new Set(), out = [];
+      arr.forEach(function (x) { if (x && !seen.has(x)) { seen.add(x); out.push(x); } });
+      return out;
+    }
+    function cuppKomb(seq, suffixes, special) {
+      var out = [], sp = special || "";
+      seq.forEach(function (a) { suffixes.forEach(function (b) { out.push(a + sp + b); }); });
+      return out;
+    }
+    function cuppConcats(seq, from, to) {
+      var out = [];
+      seq.forEach(function (a) { for (var n = from; n < to; n++) out.push(a + n); });
+      return out;
+    }
+    function cuppPairs(base) {
+      // singles + ghép đôi như bản gốc: a+b được thêm khi index(a) != index(b)
+      // và index(title(a)) != index(title(b)) — index() của Python so theo GIÁ TRỊ
+      // nên hai điều kiện này tương đương a != b và title(a) != title(b).
+      // Hệ quả đáng chú ý: một tên không bao giờ ghép với chính biến thể viết hoa
+      // của nó (không có "johnJohn"), đúng như file cupp.py sinh ra.
+      var out = base.slice();
+      base.forEach(function (a) {
+        base.forEach(function (b) {
+          if (a !== b && cuppTitle(a) !== cuppTitle(b)) out.push(a + b);
+        });
+      });
+      return out;
+    }
+    function cuppBdss(bd) {
+      // Các mảnh ngày sinh DDMMYYYY rồi tổ hợp 1, 2, 3 mảnh. Bản gốc so các
+      // mảnh bằng index() (theo giá trị) nên các mảnh trùng giá trị không tự
+      // ghép với nhau — ở đây lặp trên các giá trị phân biệt cho khớp.
+      if (!bd) return [];
+      var parts = cuppUniq([bd.slice(-2), bd.slice(-3), bd.slice(-4), bd.charAt(1), bd.charAt(3), bd.slice(0, 2), bd.slice(2, 4)]);
+      var out = [];
+      parts.forEach(function (v1) {
+        out.push(v1);
+        parts.forEach(function (v2) {
+          if (v2 === v1) return;
+          out.push(v1 + v2);
+          parts.forEach(function (v3) {
+            if (v3 === v1 || v3 === v2) return;
+            out.push(v1 + v2 + v3);
+          });
+        });
+      });
+      return cuppUniq(out);
+    }
+    function cuppSpechars(charsArr) {
+      // Mọi tổ hợp 1, 2, 3 ký tự đặc biệt (lặp được) — vòng lặp 3 lớp của bản gốc
+      var out = [];
+      charsArr.forEach(function (c1) {
+        out.push(c1);
+        charsArr.forEach(function (c2) {
+          out.push(c1 + c2);
+          charsArr.forEach(function (c3) { out.push(c1 + c2 + c3); });
+        });
+      });
+      return out;
+    }
+    function cuppField(id) {
+      return document.getElementById(id).value.toLowerCase().replace(/\s+/g, "");
+    }
+    function cuppBirth(id) {
+      return document.getElementById(id).value.replace(/\D/g, "");
+    }
+    function cuppInt(id, fallback) {
+      var v = parseInt(document.getElementById(id).value, 10);
+      return isNaN(v) ? fallback : v;
+    }
+
+    var elCuppMode = document.getElementById("cupp-mode");
+    var elCuppStatus = document.getElementById("cupp-status");
+    var elCuppOut = document.getElementById("cupp-out");
+    var cuppResult = [];       // toàn bộ wordlist (đã sắp xếp)
+    var cuppFileName = "cupp.txt";
+
+    elCuppMode.addEventListener("change", function () {
+      var imp = elCuppMode.value === "improve";
+      document.getElementById("cupp-profile-box").style.display = imp ? "none" : "";
+      document.getElementById("cupp-improve-box").style.display = imp ? "" : "none";
+    });
+    function cuppImpWords() {
+      return cuppUniq(document.getElementById("cupp-imp-text").value.split(/\s+/).map(function (s) { return s.trim(); }));
+    }
+    function cuppImpStatusUpdate() {
+      var n = cuppImpWords().length;
+      var st = document.getElementById("cupp-imp-status");
+      st.textContent = n ? ("Đang có " + n.toLocaleString("vi-VN") + " từ gốc.") : "Chưa có từ gốc nào.";
+      st.className = "status " + (n ? "ok" : "dim");
+    }
+    document.getElementById("cupp-imp-text").addEventListener("input", cuppImpStatusUpdate);
+    document.getElementById("cupp-imp-file-btn").addEventListener("click", function () {
+      document.getElementById("cupp-imp-file").click();
+    });
+    document.getElementById("cupp-imp-file").addEventListener("change", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        document.getElementById("cupp-imp-text").value = String(reader.result || "");
+        cuppImpStatusUpdate();
+      };
+      reader.readAsText(f);
+    });
+
+    function cuppConfig() {
+      var years = document.getElementById("cupp-years").value.split(",")
+        .map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+      var chars = cuppUniq(document.getElementById("cupp-chars").value.split(",")
+        .map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; }));
+      return {
+        years: years,
+        chars: chars,
+        numfrom: cuppInt("cupp-numfrom", 0),
+        numto: cuppInt("cupp-numto", 100),
+        wcfrom: cuppInt("cupp-wcfrom", 5),
+        wcto: cuppInt("cupp-wcto", 12),
+        specharsOn: document.getElementById("cupp-specs").checked,
+        randnumOn: document.getElementById("cupp-randnum").checked,
+        leetOn: document.getElementById("cupp-leet").checked,
+        lenOn: document.getElementById("cupp-lenfilter").checked
+      };
+    }
+    function cuppFinish(rawList, cfg, sourceNote) {
+      var before = rawList.length;
+      var uniq = cuppUniq(rawList);
+      var withLeet = uniq.slice();
+      if (cfg.leetOn) uniq.forEach(function (x) { withLeet.push(cuppLeet(x)); });
+      var all = cuppUniq(withLeet);
+      var kept = cfg.lenOn ? all.filter(function (x) { return x.length > cfg.wcfrom && x.length < cfg.wcto; }) : all;
+      kept.sort();
+      cuppResult = kept;
+      var MAXSHOW = 100000;
+      elCuppOut.value = kept.slice(0, MAXSHOW).join("\n");
+      document.getElementById("cupp-count").textContent = kept.length.toLocaleString("vi-VN");
+      var has = kept.length > 0;
+      document.getElementById("cupp-download").disabled = !has;
+      document.getElementById("cupp-copy").disabled = !has;
+      document.getElementById("cupp-tocrack").disabled = !has;
+      var msg = "Đã tạo " + kept.length.toLocaleString("vi-VN") + " từ" + sourceNote +
+        " · trước khử trùng lặp: " + before.toLocaleString("vi-VN") + " tổ hợp" +
+        (cfg.leetOn ? " · đã cộng biến thể leet" : "") +
+        (cfg.lenOn ? " · lọc độ dài đã loại " + (all.length - kept.length).toLocaleString("vi-VN") + " từ (giữ từ dài " + (cfg.wcfrom + 1) + "–" + (cfg.wcto - 1) + " ký tự)" : " · không lọc độ dài (" + all.length.toLocaleString("vi-VN") + " từ sau khử trùng lặp)");
+      if (!has) msg += " — danh sách rỗng: hãy nới khoảng lọc độ dài hoặc bỏ chọn lọc độ dài, vì mặc định của cupp.cfg chỉ giữ từ 6–11 ký tự.";
+      elCuppStatus.textContent = msg;
+      elCuppStatus.className = "status " + (has ? "ok" : "err");
+    }
+    function cuppError(msg) {
+      elCuppStatus.textContent = msg;
+      elCuppStatus.className = "status err";
+    }
+
+    function cuppGenerateProfile(cfg) {
+      var name = cuppField("cupp-name");
+      if (!name) { cuppError("Bản gốc bắt buộc phải có ít nhất Tên của người chính — hãy điền ô Tên trước."); return; }
+      var surname = cuppField("cupp-surname"), nick = cuppField("cupp-nick");
+      var wife = cuppField("cupp-wife"), wifen = cuppField("cupp-wifen");
+      var kid = cuppField("cupp-kid"), kidn = cuppField("cupp-kidn");
+      var pet = cuppField("cupp-pet"), company = cuppField("cupp-company");
+      var birth = cuppBirth("cupp-birth"), wifeb = cuppBirth("cupp-wifeb"), kidb = cuppBirth("cupp-kidb");
+      var pairs = [[birth, "Ngày sinh người chính"], [wifeb, "Ngày sinh bạn đời"], [kidb, "Ngày sinh của con"]];
+      for (var pi = 0; pi < pairs.length; pi++) {
+        if (pairs[pi][0] && pairs[pi][0].length !== 8) {
+          cuppError(pairs[pi][1] + " phải gồm đúng 8 chữ số dạng DDMMYYYY (đang có " + pairs[pi][0].length + " chữ số) — sửa lại hoặc để trống.");
+          return;
+        }
+      }
+      var wordsRaw = document.getElementById("cupp-words").value.toLowerCase().replace(/\s+/g, "");
+      var keywords = wordsRaw ? wordsRaw.split(",").filter(function (s) { return s.length > 0; }) : [];
+
+      var nameup = cuppTitle(name), surnameup = cuppTitle(surname), nickup = cuppTitle(nick);
+      var wifeup = cuppTitle(wife), wifenup = cuppTitle(wifen);
+      var kidup = cuppTitle(kid), kidnup = cuppTitle(kidn);
+      var petup = cuppTitle(pet), companyup = cuppTitle(company);
+      // Bản gốc giữ profile["words"] = [""] khi không có từ khoá, nên các phép
+      // ghép với word vẫn sinh ra hậu tố đứng một mình (năm, ký tự đặc biệt…)
+      var word = keywords.length ? keywords.concat(keywords.map(cuppTitle)) : [""];
+
+      var bdss = cuppBdss(birth), wbdss = cuppBdss(wifeb), kbdss = cuppBdss(kidb);
+
+      // Các nhóm tên giữ nguyên cả trường rỗng như bản gốc (trường rỗng ghép
+      // với hậu tố sẽ sinh hậu tố đứng một mình; khử trùng lặp xử lý phần thừa)
+      var kombinaa = cuppPairs([name, surname, nick, nameup, surnameup, nickup]);
+      var kombinaaw = cuppPairs([wife, wifen, wifeup, wifenup, surname, surnameup]);
+      var kombinaak = cuppPairs([kid, kidn, kidup, kidnup, surname, surnameup]);
+      var kombinaac = [pet, petup, company, companyup];
+
+      var revName = cuppRev(name), revNameup = cuppRev(nameup);
+      var revNick = cuppRev(nick), revNickup = cuppRev(nickup);
+      var revWife = cuppRev(wife), revWifeup = cuppRev(wifeup);
+      var revKid = cuppRev(kid), revKidup = cuppRev(kidup);
+      var reverse = [revName, revNameup, revNick, revNickup, revWife, revWifeup, revKid, revKidup];
+      var revN = [revName, revNameup, revNick, revNickup];
+      var revW = [revWife, revWifeup];
+      var revK = [revKid, revKidup];
+
+      var all = [];
+      function addBoth(seq, suffixes) {
+        if (!seq.length || !suffixes.length) return;
+        all = all.concat(cuppKomb(seq, suffixes), cuppKomb(seq, suffixes, "_"));
+      }
+      addBoth(kombinaa, bdss);            // kombi[1]
+      addBoth(kombinaaw, wbdss);          // kombi[2]
+      addBoth(kombinaak, kbdss);          // kombi[3]
+      addBoth(kombinaa, cfg.years);       // kombi[4]
+      addBoth(kombinaac, cfg.years);      // kombi[5]
+      addBoth(kombinaaw, cfg.years);      // kombi[6]
+      addBoth(kombinaak, cfg.years);      // kombi[7]
+      addBoth(word, bdss);                // kombi[8]
+      addBoth(word, wbdss);               // kombi[9]
+      addBoth(word, kbdss);               // kombi[10]
+      addBoth(word, cfg.years);           // kombi[11]
+      if (cfg.randnumOn) {                // kombi[12..16]
+        // (bản gốc có tính cả kombi[21] = tên đảo ngược + số, nhưng vòng lặp
+        //  cộng kết quả của nó chỉ chạy range(1,21) nên phần đó không bao giờ
+        //  lọt vào file xuất — ở đây bỏ hẳn cho khớp đầu ra thật)
+        all = all.concat(
+          cuppConcats(word, cfg.numfrom, cfg.numto),
+          cuppConcats(kombinaa, cfg.numfrom, cfg.numto),
+          cuppConcats(kombinaac, cfg.numfrom, cfg.numto),
+          cuppConcats(kombinaaw, cfg.numfrom, cfg.numto),
+          cuppConcats(kombinaak, cfg.numfrom, cfg.numto)
+        );
+      }
+      addBoth(reverse, cfg.years);        // kombi[17]
+      addBoth(revW, wbdss);               // kombi[18]
+      addBoth(revK, kbdss);               // kombi[19]
+      addBoth(revN, bdss);                // kombi[20]
+      if (cfg.specharsOn) {
+        var specs = cuppSpechars(cfg.chars);
+        all = all.concat(
+          cuppKomb(kombinaa, specs), cuppKomb(kombinaac, specs),
+          cuppKomb(kombinaaw, specs), cuppKomb(kombinaak, specs),
+          cuppKomb(word, specs), cuppKomb(reverse, specs)
+        );
+      }
+      // Danh sách nền của bản gốc: mảnh ngày sinh + đảo ngược + các nhóm tên + từ khoá
+      all = all.concat(bdss, wbdss, kbdss, reverse, kombinaa, kombinaac, kombinaaw, kombinaak, word);
+      cuppFileName = name + ".txt";
+      cuppFinish(all, cfg, " cho hồ sơ “" + name + "”");
+    }
+
+    function cuppGenerateImprove(cfg) {
+      var words = cuppImpWords();
+      if (!words.length) { cuppError("Hãy dán hoặc nạp wordlist gốc trước — chưa có từ nào để nâng cấp."); return; }
+      var concatOn = document.getElementById("cupp-imp-concat").checked;
+      var contPairs = [];
+      if (concatOn) {
+        if (words.length * (words.length - 1) > 2000000) {
+          cuppError("Ghép đôi " + words.length.toLocaleString("vi-VN") + " từ sẽ sinh hơn 2 triệu tổ hợp ngay ở bước ghép — bản gốc cũng cảnh báo việc này (threshold 200 trong cupp.cfg). Hãy rút gọn danh sách gốc hoặc bỏ chọn ghép đôi.");
+          return;
+        }
+        for (var i = 0; i < words.length; i++)
+          for (var j = 0; j < words.length; j++)
+            if (i !== j) contPairs.push(words[i] + words[j]);
+      }
+      // Bản gốc khởi tạo cont = [""] rồi mới cộng các cặp ghép, nên khi bật
+      // ghép đôi, các phép komb với cont còn sinh ra hậu tố đứng một mình
+      // (năm trần, chuỗi ký tự đặc biệt trần, số trần) — giữ nguyên cho khớp.
+      var contAll = concatOn ? [""].concat(contPairs) : contPairs;
+      var all = words.concat(contAll);
+      all = all.concat(cuppKomb(words, cfg.years));
+      if (concatOn) all = all.concat(cuppKomb(contAll, cfg.years));
+      if (cfg.specharsOn) {
+        var specs = cuppSpechars(cfg.chars);
+        all = all.concat(cuppKomb(words, specs));
+        if (concatOn) all = all.concat(cuppKomb(contAll, specs));
+      }
+      if (cfg.randnumOn) {
+        all = all.concat(cuppConcats(words, cfg.numfrom, cfg.numto));
+        if (concatOn) all = all.concat(cuppConcats(contAll, cfg.numfrom, cfg.numto));
+      }
+      cuppFileName = "wordlist.cupp.txt";
+      cuppFinish(all, cfg, " từ " + words.length.toLocaleString("vi-VN") + " từ gốc");
+    }
+
+    document.getElementById("cupp-gen").addEventListener("click", function () {
+      var cfg = cuppConfig();
+      var btn = this;
+      btn.disabled = true;
+      elCuppStatus.textContent = "Đang tạo wordlist…";
+      elCuppStatus.className = "status dim";
+      setTimeout(function () {
+        try {
+          if (elCuppMode.value === "improve") cuppGenerateImprove(cfg);
+          else cuppGenerateProfile(cfg);
+        } catch (e) {
+          cuppError("Có lỗi khi tạo: " + e.message);
+        }
+        btn.disabled = false;
+      }, 30);
+    });
+    document.getElementById("cupp-download").addEventListener("click", function () {
+      if (!cuppResult.length) return;
+      var blob = new Blob([cuppResult.join("\n") + "\n"], { type: "text/plain;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = cuppFileName;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 400);
+    });
+    document.getElementById("cupp-copy").addEventListener("click", function () {
+      copyText(cuppResult.join("\n"), this);
+    });
+    document.getElementById("cupp-tocrack").addEventListener("click", function () {
+      if (!cuppResult.length) return;
+      elCrackWl.value = cuppResult.join("\n");
+      updateWlStatus();
+      document.querySelector('[data-tab="crack"]').click();
+      elCrackWlStatus.textContent = "Đã nạp " + cuppResult.length.toLocaleString("vi-VN") + " ứng viên từ tab CUPP — chọn hash/token đích rồi bấm “Bắt đầu dò”.";
+      elCrackWlStatus.className = "status ok";
+    });
     </script>
   </body>
 </html>
