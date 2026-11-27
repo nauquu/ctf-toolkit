@@ -180,6 +180,24 @@
         border:1px solid var(--line-soft); border-radius:6px; image-rendering:pixelated;
       }
       .plane figcaption{ text-align:center; font-size:12.5px; color:var(--muted); margin-top:5px; font-family:var(--mono); }
+
+      /* ---------- Phân tích input ---------- */
+      .detect-list{ display:flex; flex-direction:column; gap:12px; }
+      .detect-item{ background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius); padding:14px 16px; }
+      .detect-head{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
+      .detect-head .dname{ font-size:16px; font-weight:700; letter-spacing:-0.01em; }
+      .badge.high{ color:#7fd6a8; border-color:#2c5240; background:#14231c; }
+      .badge.mid{ color:#f5c86b; border-color:#5a4720; background:#241c0d; }
+      .badge.low{ color:var(--muted); }
+      .detect-ev{ color:var(--muted); font-size:13.5px; margin:8px 0 0; }
+      .detect-ev .mono{ color:var(--text); font-size:12.5px; }
+      .detect-preview{
+        background:var(--panel-2); border:1px solid var(--line-soft); border-radius:8px;
+        padding:10px 12px; margin-top:10px; font-family:var(--mono); font-size:12.5px;
+        line-height:1.65; white-space:pre-wrap; word-break:break-all; max-height:220px; overflow:auto;
+      }
+      .detect-preview .plabel{ font-family:var(--sans); font-size:12px; color:var(--faint); text-transform:uppercase; letter-spacing:0.07em; display:block; margin-bottom:4px; }
+      .sample-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
     </style>
   </head>
   <body>
@@ -194,6 +212,7 @@
         <button class="tab" role="tab" aria-selected="false" data-tab="rsa">Giải mã RSA</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="stego">Giải mã ảnh</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="cupp">CUPP · Tạo wordlist</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="identify">Phân tích input</button>
       </nav>
 
       <!-- ================= JWT WORKBENCH ================= -->
@@ -821,6 +840,41 @@
           <label class="flabel" for="cupp-out" style="margin-top:12px;">Wordlist đã tạo — <span id="cupp-count">0</span> từ</label>
           <textarea class="mono" id="cupp-out" rows="14" readonly spellcheck="false" placeholder="Wordlist sẽ hiện ở đây…"></textarea>
           <p class="seg-note">File tải về ở chế độ hồ sơ được đặt tên <span class="mono">&lt;tên&gt;.txt</span> như bản gốc; ở chế độ nâng cấp là <span class="mono">wordlist.cupp.txt</span>. Wordlist lớn (trên 100.000 từ) chỉ hiển thị 100.000 dòng đầu ở ô trên — nút tải và nút đưa sang Dò hash vẫn dùng toàn bộ danh sách.</p>
+        </div>
+      </section>
+
+      <!-- ================= PHÂN TÍCH INPUT / ĐOÁN LOẠI MÃ HOÁ ================= -->
+      <section class="panel" id="panel-identify" role="tabpanel">
+        <h2>Phân tích input — đoán loại mã hoá / chuyển đổi</h2>
+        <p class="lede">Dán bất kỳ chuỗi lạ nào vào — một đoạn hash, một cục Base64, token, dãy nhị phân, Morse, chuỗi bị mã hoá nhiều lớp… — trang sẽ soi cấu trúc của nó (bảng ký tự, độ dài, dấu hiệu định dạng, entropy), xếp hạng các khả năng từ chắc chắn nhất xuống, và <strong>thử giải mã thật</strong> từng khả năng để bạn xem trước kết quả. Gặp mã hoá lồng nhau, bấm “Dùng kết quả này làm input mới” ở lớp vừa bóc để bóc tiếp lớp trong. Mọi phân tích chạy ngay khi gõ, 100% trong trình duyệt.</p>
+
+        <div class="card">
+          <label class="flabel" for="id-input">Input cần phân tích</label>
+          <textarea class="mono" id="id-input" rows="7" spellcheck="false" placeholder="Dán chuỗi cần nhận diện vào đây — ví dụ: ZmxhZ3toZWxsb30= , 666c6167 , eyJhbGciOi… , ..-. .-.. .- --. , 01100110 01101100…"></textarea>
+          <div class="sample-row" aria-label="Dữ kiện mẫu để thử nhanh">
+            <span style="font-size:13px; color:var(--faint); align-self:center;">Thử nhanh:</span>
+            <button class="btn small" type="button" data-id-sample="b64">Base64</button>
+            <button class="btn small" type="button" data-id-sample="hex">Hex</button>
+            <button class="btn small" type="button" data-id-sample="jwt">JWT</button>
+            <button class="btn small" type="button" data-id-sample="hash">Hash SHA-256</button>
+            <button class="btn small" type="button" data-id-sample="double">Base64 lồng Hex</button>
+            <button class="btn small" type="button" data-id-sample="morse">Morse</button>
+            <button class="btn small" type="button" data-id-sample="binary">Nhị phân</button>
+            <button class="btn small" type="button" data-id-sample="rot13">ROT13</button>
+            <button class="btn small" type="button" data-id-sample="url">URL-encode</button>
+          </div>
+          <div class="status dim" id="id-status">Chưa có input.</div>
+        </div>
+
+        <div class="card" id="id-stats-card" style="display:none;">
+          <h3>Đặc điểm của input</h3>
+          <div class="claims" id="id-stats"></div>
+        </div>
+
+        <div id="id-results-wrap" style="display:none;">
+          <h2 style="font-size:17px; margin:0 0 4px;">Khả năng nhận diện — <span id="id-count">0</span></h2>
+          <p class="lede" style="margin-bottom:12px;">Xếp theo độ tin cậy giảm dần. “Độ tin cậy” là điểm heuristic từ cấu trúc chuỗi và việc giải mã thử có ra dữ liệu đọc được hay không — không phải xác suất tuyệt đối: hash và dữ liệu đã mã hoá thật (AES/RSA) về bản chất trông như ngẫu nhiên và không bóc được nếu thiếu khoá.</p>
+          <div class="detect-list" id="id-results"></div>
         </div>
       </section>
 
@@ -2795,6 +2849,515 @@ function sha512Bytes(msg){
       document.querySelector('[data-tab="crack"]').click();
       elCrackWlStatus.textContent = "Đã nạp " + cuppResult.length.toLocaleString("vi-VN") + " ứng viên từ tab CUPP — chọn hash/token đích rồi bấm “Bắt đầu dò”.";
       elCrackWlStatus.className = "status ok";
+    });
+
+    /* ============================================================
+       Phân tích input — đoán loại mã hoá / chuyển đổi.
+       Heuristic theo cấu trúc (bảng ký tự, độ dài, tiền tố, magic
+       bytes) + giải mã thử thật: giải ra dữ liệu đọc được thì
+       điểm tin cậy tăng mạnh. Hỗ trợ bóc từng lớp mã hoá lồng nhau.
+       ============================================================ */
+    var elIdInput = document.getElementById("id-input");
+    var elIdStatus = document.getElementById("id-status");
+    var elIdStatsCard = document.getElementById("id-stats-card");
+    var elIdStats = document.getElementById("id-stats");
+    var elIdResultsWrap = document.getElementById("id-results-wrap");
+    var elIdResults = document.getElementById("id-results");
+    var elIdCount = document.getElementById("id-count");
+
+    var ID_SAMPLES = {
+      b64: "ZmxhZ3tiYXNlNjRfaXNfbm90X2VuY3J5cHRpb259",
+      hex: "666c61677b6865785f69735f6a7573745f656e636f64696e677d",
+      jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3aWVuZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.4Adcj3UFYzPUVaVF43FmMabRlaRQHfxKE21_9q6FTnY",
+      hash: "b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86",
+      double: "NjY2YzYxNjc3YjY2NmM2MTY3N2Q=",
+      morse: "..-. .-.. .- --. ---... -.-- --- ..- -....- ..-. --- ..- -. -.. -....- .. -",
+      binary: "01100110 01101100 01100001 01100111 01111011 01100010 01101001 01101110 01100001 01110010 01111001 01111101",
+      rot13: "synt{ebg13_vf_whfg_n_pnrfne}",
+      url: "flag%7Burl%5Fencoding%5Fis%5Feverywhere%7D"
+    };
+    document.querySelectorAll("[data-id-sample]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        elIdInput.value = ID_SAMPLES[btn.getAttribute("data-id-sample")] || "";
+        analyzeInput();
+        elIdInput.focus();
+      });
+    });
+
+    function idEntropy(str) {
+      if (!str) return 0;
+      var counts = {}, i;
+      for (i = 0; i < str.length; i++) counts[str[i]] = (counts[str[i]] || 0) + 1;
+      var h = 0;
+      Object.keys(counts).forEach(function (k) {
+        var p = counts[k] / str.length;
+        h -= p * Math.log2(p);
+      });
+      return h;
+    }
+    function idPrintableRatio(bytes) {
+      if (!bytes.length) return 0;
+      var ok = 0;
+      for (var i = 0; i < bytes.length; i++) {
+        var b = bytes[i];
+        if (b === 9 || b === 10 || b === 13 || (b >= 32 && b !== 127)) ok++;
+      }
+      return ok / bytes.length;
+    }
+    function idBytesPreview(bytes, maxChars) {
+      var text = td.decode(bytes);
+      var clean = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "·");
+      var lim = maxChars || 600;
+      return clean.length > lim ? clean.slice(0, lim) + " …(còn " + (clean.length - lim) + " ký tự)" : clean;
+    }
+    var ID_MAGIC = [
+      [[0x89, 0x50, 0x4e, 0x47], "PNG (ảnh)"],
+      [[0xff, 0xd8, 0xff], "JPEG (ảnh)"],
+      [[0x47, 0x49, 0x46, 0x38], "GIF (ảnh)"],
+      [[0x25, 0x50, 0x44, 0x46], "PDF"],
+      [[0x50, 0x4b, 0x03, 0x04], "ZIP (nén — cũng là lõi của .docx/.xlsx/.jar/.apk)"],
+      [[0x1f, 0x8b], "GZIP (nén)"],
+      [[0x42, 0x5a, 0x68], "BZIP2 (nén)"],
+      [[0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00], "XZ (nén)"],
+      [[0x7f, 0x45, 0x4c, 0x46], "ELF (file chạy Linux)"],
+      [[0x4d, 0x5a], "PE / MZ (file chạy Windows .exe/.dll)"],
+      [[0x52, 0x61, 0x72, 0x21], "RAR (nén)"],
+      [[0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c], "7z (nén)"],
+      [[0x53, 0x51, 0x4c, 0x69, 0x74, 0x65], "SQLite (cơ sở dữ liệu)"]
+    ];
+    function idMagicName(bytes) {
+      for (var i = 0; i < ID_MAGIC.length; i++) {
+        var sig = ID_MAGIC[i][0], ok = bytes.length >= sig.length;
+        for (var j = 0; ok && j < sig.length; j++) if (bytes[j] !== sig[j]) ok = false;
+        if (ok) return ID_MAGIC[i][1];
+      }
+      return null;
+    }
+    /* ---------- Các bộ giải mã thử ---------- */
+    function idDecodeBase32(s) {
+      var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+      var clean = s.toUpperCase().replace(/=+$/, "").replace(/\s+/g, "");
+      var bits = 0, val = 0, out = [];
+      for (var i = 0; i < clean.length; i++) {
+        var idx = alpha.indexOf(clean[i]);
+        if (idx < 0) throw new Error("ký tự ngoài bảng Base32");
+        val = (val << 5) | idx; bits += 5;
+        if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; }
+      }
+      return new Uint8Array(out);
+    }
+    function idDecodeBase58(s) {
+      var alpha = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      var bytes = [0];
+      for (var i = 0; i < s.length; i++) {
+        var idx = alpha.indexOf(s[i]);
+        if (idx < 0) throw new Error("ký tự ngoài bảng Base58");
+        var carry = idx;
+        for (var j = 0; j < bytes.length; j++) {
+          var v = bytes[j] * 58 + carry;
+          bytes[j] = v & 255; carry = v >> 8;
+        }
+        while (carry) { bytes.push(carry & 255); carry >>= 8; }
+      }
+      var zeros = 0;
+      while (zeros < s.length && s[zeros] === "1") zeros++;
+      var out = new Uint8Array(zeros + bytes.length);
+      for (var k = 0; k < bytes.length; k++) out[zeros + bytes.length - 1 - k] = bytes[k];
+      if (s.replace(/1/g, "") === "") return new Uint8Array(zeros);
+      return out;
+    }
+    var ID_MORSE = { ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E", "..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J", "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O", ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T", "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y", "--..": "Z", "-----": "0", ".----": "1", "..---": "2", "...--": "3", "....-": "4", ".....": "5", "-....": "6", "--...": "7", "---..": "8", "----.": "9", ".-.-.-": ".", "--..--": ",", "..--..": "?", "-..-.": "/", "-....-": "-", "-.-.-.": ";", "---...": ":", "-.--.": "(", "-.--.-": ")", ".-..-.": "\"", ".----.": "'", "-.-.--": "!", ".--.-.": "@", "-...-": "=", "..--.-": "_", "...-..-": "$", ".-...": "&", ".-.-.": "+" };
+    function idDecodeMorse(s) {
+      return s.trim().split(/\s*\/\s*|\s{2,}/).map(function (word) {
+        return word.trim().split(/\s+/).map(function (sym) {
+          return ID_MORSE[sym] !== undefined ? ID_MORSE[sym] : "?";
+        }).join("");
+      }).join(" ");
+    }
+    function idRot(str, n) {
+      return str.replace(/[a-zA-Z]/g, function (c) {
+        var base = c <= "Z" ? 65 : 97;
+        return String.fromCharCode((c.charCodeAt(0) - base + n) % 26 + base);
+      });
+    }
+    var ID_COMMON_WORDS = ["the", "and", "flag", "ctf", "this", "that", "hello", "key", "password", "secret", "you", "found", "is", "are", "have", "with", "for"];
+    function idWordScore(str) {
+      var low = " " + str.toLowerCase() + " ";
+      var sc = 0;
+      ID_COMMON_WORDS.forEach(function (w) { if (low.indexOf(w) >= 0) sc++; });
+      if (/\{[^}]{2,}\}/.test(str)) sc += 3; // dạng flag{...}
+      return sc;
+    }
+    function idConfBadge(conf) {
+      if (conf >= 75) return '<span class="badge high">Tin cậy cao · ' + conf + '%</span>';
+      if (conf >= 45) return '<span class="badge mid">Tin cậy trung bình · ' + conf + '%</span>';
+      return '<span class="badge low">Khả năng thấp · ' + conf + '%</span>';
+    }
+
+    function analyzeInput() {
+      var raw = elIdInput.value;
+      var s = raw.trim();
+      elIdResults.innerHTML = "";
+      if (!s) {
+        elIdStatus.textContent = "Chưa có input.";
+        elIdStatus.className = "status dim";
+        elIdStatsCard.style.display = "none";
+        elIdResultsWrap.style.display = "none";
+        return;
+      }
+      var compact = s.replace(/\s+/g, "");
+      var results = [];
+      function add(name, conf, evidence, decodedText, decodedBytes, action) {
+        results.push({ name: name, conf: Math.max(1, Math.min(99, Math.round(conf))), evidence: evidence, decodedText: decodedText || null, decodedBytes: decodedBytes || null, action: action || null });
+      }
+
+      /* ----- Đặc điểm tổng quan ----- */
+      var nDigit = (compact.match(/[0-9]/g) || []).length;
+      var nLower = (compact.match(/[a-z]/g) || []).length;
+      var nUpper = (compact.match(/[A-Z]/g) || []).length;
+      var nHexCh = (compact.match(/[0-9a-fA-F]/g) || []).length;
+      var ent = idEntropy(compact);
+      var charsetNote = "chữ thường + số";
+      var kinds = [];
+      if (nLower) kinds.push("thường " + nLower);
+      if (nUpper) kinds.push("HOA " + nUpper);
+      if (nDigit) kinds.push("số " + nDigit);
+      var nOther = compact.length - nLower - nUpper - nDigit;
+      if (nOther) kinds.push("ký tự khác " + nOther);
+      charsetNote = kinds.join(" · ");
+      var statRows = [
+        ["Độ dài", compact.length.toLocaleString("vi-VN") + " ký tự" + (raw.length !== compact.length ? " (" + raw.length + " ký tự gồm khoảng trắng/xuống dòng)" : ""), s.split(/\r?\n/).length + " dòng"],
+        ["Entropy Shannon", ent.toFixed(2) + " bit/ký tự", ent > 5.5 ? "Cao — giống dữ liệu đã nén/mã hoá hoặc Base64 dày đặc" : (ent > 4 ? "Trung bình — giống mã hoá dạng chữ (Base64/Hex) hoặc văn bản nén" : "Thấp — giống văn bản thường hoặc mã đơn giản (Morse, ROT…)")],
+        ["Thành phần ký tự", charsetNote, compact.length && nHexCh === compact.length ? "Toàn bộ ký tự đều thuộc bảng hex (0-9a-f)" : ""],
+        ["Byte khi đọc dạng UTF-8", te.encode(s).length.toLocaleString("vi-VN") + " byte", /[^\x00-\x7F]/.test(s) ? "Có ký tự ngoài ASCII (tiếng Việt / Unicode)" : "Thuần ASCII"]
+      ];
+      elIdStats.innerHTML = statRows.map(function (r) {
+        return '<div class="claim"><div class="k">' + escapeHtml(r[0]) + '</div><div class="v" style="font-family:var(--sans); font-size:14px;">' + escapeHtml(r[1]) + '</div>' + (r[2] ? '<div class="sub">' + escapeHtml(r[2]) + '</div>' : "") + "</div>";
+      }).join("");
+      elIdStatsCard.style.display = "";
+
+      /* ----- PEM ----- */
+      var pemM = s.match(/-----BEGIN ([A-Z0-9 ]+)-----/);
+      if (pemM) add("Khối PEM — " + pemM[1].trim(), 99, "Có dòng mở đầu <span class='mono'>-----BEGIN " + escapeHtml(pemM[1].trim()) + "-----</span>: đây là định dạng bọc Base64 chuẩn cho khoá/chứng chỉ. Phần thân giữa hai dòng BEGIN/END chính là Base64 của dữ liệu DER.", null, null,
+        /PRIVATE KEY/.test(pemM[1]) ? { label: "Đưa sang tab Giải mã RSA", tab: "rsa", rsaKey: true } : null);
+
+      /* ----- JWT ----- */
+      var jwtParts = compact.split(".");
+      if (jwtParts.length === 3 && jwtParts.every(function (p) { return /^[A-Za-z0-9_-]+$/.test(p); }) && jwtParts[0].length >= 10) {
+        try {
+          var jHeader = JSON.parse(td.decode(b64ToBytes(jwtParts[0], true)));
+          var jPayloadTxt = td.decode(b64ToBytes(jwtParts[1], true));
+          var jPayload = JSON.parse(jPayloadTxt);
+          add("JWT (JSON Web Token)", 98, "Đúng 3 đoạn Base64URL ngăn bằng dấu chấm; đoạn 1 giải ra JSON header có <span class='mono'>alg = " + escapeHtml(String(jHeader.alg || "?")) + "</span>" + (jHeader.typ ? ", <span class='mono'>typ = " + escapeHtml(String(jHeader.typ)) + "</span>" : "") + ". Đoạn 3 là chữ ký" + (jwtParts[2] ? " (" + jwtParts[2].length + " ký tự)." : " rỗng — dấu hiệu alg=none."),
+            "Header: " + JSON.stringify(jHeader) + "\nPayload: " + JSON.stringify(jPayload), null,
+            { label: "Mở trong JWT Workbench", tab: "jwt", jwt: true });
+        } catch (e) { /* không phải JWT thật */ }
+      }
+
+      /* ----- Các định dạng hash có tiền tố ($) ----- */
+      if (/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(compact))
+        add("Hash bcrypt", 97, "Tiền tố <span class='mono'>$2a$/$2b$/$2y$</span> + cost 2 chữ số + 53 ký tự bảng riêng của bcrypt — định dạng của thư viện bcrypt. Dò bằng hashcat mode 3200.", null, null, { label: "Lấy lệnh hashcat (mode 3200)", tab: "hashcat", hcMode: "3200" });
+      else if (/^\$argon2(id|i|d)\$/.test(compact))
+        add("Hash Argon2", 97, "Tiền tố <span class='mono'>$argon2i$/$argon2d$/$argon2id$</span> — định dạng chuẩn của Argon2 (hàm băm mật khẩu hiện đại, có muối và tham số bộ nhớ kèm theo trong chuỗi).", null, null, null);
+      else if (/^\$(1|5|6|y)\$/.test(compact)) {
+        var cryptName = { "1": "md5crypt — hashcat mode 500", "5": "sha256crypt — hashcat mode 7400", "6": "sha512crypt — hashcat mode 1800", "y": "yescrypt" }[compact[1]];
+        add("Hash Unix crypt (" + cryptName + ")", 95, "Tiền tố <span class='mono'>$" + compact[1] + "$</span> là dấu hiệu của định dạng mật khẩu trong <span class='mono'>/etc/shadow</span> trên Linux: $" + escapeHtml(compact[1]) + "$ tương ứng " + cryptName + ".", null, null, null);
+      }
+      if (/^[a-f0-9]{32}:[a-f0-9]{32}$/i.test(compact))
+        add("Cặp NTLM dạng LM:NT hoặc hash:muối", 70, "Hai vế hex 32 ký tự ngăn bằng dấu hai chấm — mẫu quen thuộc trong dump mật khẩu Windows (LM hash : NT hash) hoặc định dạng hash:muối.", null, null, { label: "Đưa vế sau sang Dò hash (NTLM)", tab: "crack", crackHash: compact.split(":")[1], crackAlgo: "ntlm" });
+
+      /* ----- Hex / hash hex ----- */
+      var isHex = /^[0-9a-fA-F]+$/.test(compact) && compact.length >= 2 && compact.length % 2 === 0;
+      if (isHex) {
+        var hexBytes = null;
+        try { hexBytes = hexToBytes(compact); } catch (e) {}
+        var hashByLen = { 8: "CRC-32 / Adler-32 (checksum, không phải hash mật khẩu)", 32: "MD5 hoặc NTLM — hai loại trùng độ dài, phải chọn tay khi dò", 40: "SHA-1 (cũng có thể là RIPEMD-160)", 56: "SHA-224", 64: "SHA-256", 96: "SHA-384", 128: "SHA-512" };
+        if (hashByLen[compact.length]) {
+          var isHashLen = [32, 40, 56, 64, 96, 128].indexOf(compact.length) >= 0;
+          add(isHashLen ? "Hash dạng hex — " + hashByLen[compact.length].split(" — ")[0] : "Checksum dạng hex — " + hashByLen[compact.length], isHashLen ? 82 : 65,
+            "Toàn bộ " + compact.length + " ký tự đều là hex và độ dài này khớp chính xác độ dài đầu ra của " + escapeHtml(hashByLen[compact.length]) + ". Hash là hàm một chiều: không “giải mã” ngược được, chỉ dò bằng wordlist/hashcat.",
+            null, null, isHashLen ? { label: "Đưa sang tab Dò hash", tab: "crack", crackHash: compact.toLowerCase(), crackAlgo: compact.length === 40 ? "sha1" : compact.length === 64 ? "sha256" : compact.length === 128 ? "sha512" : "auto" } : null);
+        }
+        if (hexBytes) {
+          var hRatio = idPrintableRatio(hexBytes);
+          var hMagic = idMagicName(hexBytes);
+          if (hMagic) add("Hex của một file " + hMagic, 92, "Giải hex ra byte thô thì các byte đầu khớp chữ ký (magic bytes) của định dạng " + escapeHtml(hMagic) + ".", idBytesPreview(hexBytes), hexBytes, null);
+          else if (hRatio > 0.92) add("Mã hoá Hex (hex encoding)", 88, "Mọi ký tự đều là hex, và giải hex ra thì được dữ liệu đọc như văn bản (" + Math.round(hRatio * 100) + "% ký tự in được) — đây là văn bản được viết lại dưới dạng hex, không phải hash.", idBytesPreview(hexBytes), hexBytes, null);
+          else if (!hashByLen[compact.length]) add("Mã hoá Hex (hex encoding)", 55, "Mọi ký tự đều là hex và giải được thành " + hexBytes.length + " byte, nhưng dữ liệu giải ra không đọc như văn bản (chỉ " + Math.round(hRatio * 100) + "% in được) — có thể là hex của dữ liệu nhị phân, hoặc một lớp mã hoá nữa nằm bên trong.", "Dạng hex của dữ liệu đã giải: " + bytesToHex(hexBytes).slice(0, 300), hexBytes, null);
+        }
+      }
+
+      /* ----- Base64 / Base64URL ----- */
+      var b64StdTest = /^[A-Za-z0-9+/]+={0,2}$/.test(compact);
+      var b64UrlTest = /^[A-Za-z0-9_-]+={0,2}$/.test(compact) && /[-_]/.test(compact);
+      if ((b64StdTest || b64UrlTest) && compact.length >= 8 && !isHex) {
+        var urlSafe = b64UrlTest && !/[+/]/.test(compact);
+        try {
+          var bBytes = b64ToBytes(compact, urlSafe);
+          var reEnc = bytesToB64(bBytes, urlSafe);
+          var canonical = reEnc.replace(/=+$/, "") === compact.replace(/=+$/, "");
+          var bRatio = idPrintableRatio(bBytes);
+          var bMagic = idMagicName(bBytes);
+          var bConf = canonical ? 62 : 42;
+          if (bRatio > 0.92) bConf += 26; else if (bRatio > 0.7) bConf += 10;
+          if (compact.length % 4 === 0) bConf += 6;
+          if (/=$/.test(compact) || /==$/.test(compact)) bConf += 4;
+          var bName = urlSafe ? "Base64URL" : "Base64";
+          if (bMagic) add(bName + " của một file " + bMagic, Math.max(bConf, 90), "Giải " + bName + " ra byte thô thì các byte đầu khớp chữ ký (magic bytes) của " + escapeHtml(bMagic) + " — input là một file được mã hoá " + bName + ".", idBytesPreview(bBytes), bBytes, null);
+          else add("Mã hoá " + bName, bConf, "Bảng ký tự khớp " + bName + (urlSafe ? " (có ký tự - hoặc _ của biến thể URL-safe)" : " (A-Z a-z 0-9 + /)") + (canonical ? ", và mã hoá lại dữ liệu đã giải cho ra đúng chuỗi gốc (dạng chuẩn)." : ", nhưng mã hoá lại không khớp hoàn toàn chuỗi gốc — có thể bị cắt/thừa ký tự.") + (bRatio > 0.92 ? " Dữ liệu giải ra đọc như văn bản." : " Dữ liệu giải ra chỉ có " + Math.round(bRatio * 100) + "% ký tự in được — có thể bên trong còn một lớp nữa, hoặc đây là dữ liệu nhị phân."),
+            idBytesPreview(bBytes), bBytes, null);
+          // Lớp trong: dữ liệu giải ra tự nó lại là một định dạng khác
+          var innerTxt = td.decode(bBytes).trim();
+          if (bRatio > 0.9 && innerTxt !== compact) {
+            if (/^[0-9a-fA-F]+$/.test(innerTxt) && innerTxt.length % 2 === 0)
+              add("↳ Lớp trong của " + bName + " là Hex", 80, "Giải " + bName + " xong được một chuỗi toàn ký tự hex dài " + innerTxt.length + " — mã hoá lồng nhau: bóc tiếp lớp Hex bằng nút bên dưới.", null, null, { label: "Bóc tiếp: dùng lớp trong làm input", reuseText: innerTxt });
+            else if (/^[A-Za-z0-9+/=_-]+$/.test(innerTxt) && innerTxt.length >= 8 && innerTxt.length % 4 === 0)
+              add("↳ Lớp trong của " + bName + " có thể là Base64 nữa", 66, "Giải lớp ngoài xong vẫn được một chuỗi đúng bảng ký tự Base64 — nhiều bài CTF bọc Base64 2–3 lớp. Bóc tiếp bằng nút bên dưới.", null, null, { label: "Bóc tiếp: dùng lớp trong làm input", reuseText: innerTxt });
+            else if (/^[01\s]+$/.test(innerTxt))
+              add("↳ Lớp trong của " + bName + " là nhị phân (binary)", 75, "Giải " + bName + " xong được chuỗi chỉ gồm 0 và 1 — lớp trong là mã hoá nhị phân.", null, null, { label: "Bóc tiếp: dùng lớp trong làm input", reuseText: innerTxt });
+          }
+        } catch (e) { /* không giải được thì bỏ qua */ }
+      }
+
+      /* ----- Base32 ----- */
+      if (/^[A-Z2-7]+={0,6}$/i.test(compact) && compact.length >= 8 && compact.length % 8 === 0 && !isHex) {
+        try {
+          var b32 = idDecodeBase32(compact);
+          var r32 = idPrintableRatio(b32);
+          if (r32 > 0.85) add("Mã hoá Base32", r32 > 0.92 ? 84 : 62, "Chỉ gồm các ký tự A-Z và 2-7 (bảng Base32), độ dài là bội số của 8, và giải ra được dữ liệu " + (r32 > 0.92 ? "đọc như văn bản." : "khá giống văn bản (" + Math.round(r32 * 100) + "% in được)."), idBytesPreview(b32), b32, null);
+        } catch (e) {}
+      }
+
+      /* ----- Base58 ----- */
+      if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/.test(compact) && compact.length >= 12 && !isHex && !b64StdTest) {
+        try {
+          var b58 = idDecodeBase58(compact);
+          var r58 = idPrintableRatio(b58);
+          if (r58 > 0.85) add("Mã hoá Base58", 68, "Chuỗi tránh đúng 4 ký tự dễ nhầm của Base58 (0, O, I, l) và giải Base58 ra được dữ liệu đọc như văn bản. Base58 hay gặp trong địa chỉ Bitcoin và một số bài CTF.", idBytesPreview(b58), b58, null);
+          else add("Mã hoá Base58 (khả năng)", 40, "Bảng ký tự khớp Base58 (thiếu 0, O, I, l) nhưng dữ liệu giải ra không đọc như văn bản — cũng có thể đây chỉ là một chuỗi định danh ngẫu nhiên.", null, null, null);
+        } catch (e) {}
+      }
+
+      /* ----- Nhị phân / bát phân / thập phân ----- */
+      if (/^[01]+$/.test(compact) && compact.length % 8 === 0 && compact.length >= 16) {
+        var binBytes = new Uint8Array(compact.length / 8);
+        for (var bi = 0; bi < binBytes.length; bi++) binBytes[bi] = parseInt(compact.substr(bi * 8, 8), 2);
+        var binR = idPrintableRatio(binBytes);
+        add("Mã hoá nhị phân (binary → ASCII)", binR > 0.9 ? 90 : 55, "Chuỗi chỉ gồm 0 và 1, độ dài " + compact.length + " là bội số của 8 — mỗi nhóm 8 bit là một byte/ký tự" + (binR > 0.9 ? ", và ghép lại đọc được thành văn bản." : ", nhưng ghép lại không ra văn bản rõ ràng."), idBytesPreview(binBytes), binBytes, null);
+      } else if (/^[01\s]+$/.test(s) && s.trim().length >= 16) {
+        var binGroups = s.trim().split(/\s+/);
+        if (binGroups.every(function (g) { return /^[01]{8}$/.test(g); })) {
+          var bgBytes = new Uint8Array(binGroups.map(function (g) { return parseInt(g, 2); }));
+          add("Mã hoá nhị phân (binary → ASCII, có dấu cách)", idPrintableRatio(bgBytes) > 0.9 ? 92 : 60, "Các nhóm 8 bit 0/1 ngăn bằng khoảng trắng — mỗi nhóm là một ký tự ASCII.", idBytesPreview(bgBytes), bgBytes, null);
+        }
+      }
+      if (/^[0-7]+$/.test(compact) && compact.length % 3 === 0 && compact.length >= 12 && !/^[01]+$/.test(compact)) {
+        var octBytes = new Uint8Array(compact.length / 3), octOk = true;
+        for (var oi2 = 0; oi2 < octBytes.length; oi2++) { var ov = parseInt(compact.substr(oi2 * 3, 3), 8); if (ov > 255) { octOk = false; break; } octBytes[oi2] = ov; }
+        if (octOk && idPrintableRatio(octBytes) > 0.9) add("Mã hoá bát phân (octal → ASCII)", 78, "Chuỗi chỉ gồm chữ số 0-7, chia được thành các nhóm 3 chữ số mà mỗi nhóm ≤ 377 (255) — mỗi nhóm là một ký tự viết theo cơ số 8.", idBytesPreview(octBytes), octBytes, null);
+      }
+      var decTokens = s.split(/[\s,;]+/).filter(function (t) { return t.length > 0; });
+      if (decTokens.length >= 4 && decTokens.every(function (t) { return /^\d{1,3}$/.test(t) && parseInt(t, 10) <= 255; }) && /[\s,;]/.test(s)) {
+        var decBytes = new Uint8Array(decTokens.map(function (t) { return parseInt(t, 10); }));
+        var decR = idPrintableRatio(decBytes);
+        if (decR > 0.85) add("Dãy số thập phân của byte (decimal bytes)", 80, decTokens.length + " số trong khoảng 0-255 ngăn nhau bằng dấu cách/phẩy — đọc mỗi số là một byte thì " + (decR > 0.92 ? "được văn bản đọc rõ." : "khá giống văn bản."), idBytesPreview(decBytes), decBytes, null);
+      }
+
+      /* ----- Morse ----- */
+      if (/^[.\-\/\s]+$/.test(s) && s.indexOf(".") >= 0 && s.indexOf("-") >= 0) {
+        var morseTxt = idDecodeMorse(s);
+        var morseBad = (morseTxt.match(/\?/g) || []).length;
+        add("Mã Morse", morseBad === 0 ? 94 : 72, "Chuỗi chỉ gồm dấu chấm, dấu gạch và khoảng trắng/dấu / ngăn từ — đúng bảng ký tự Morse" + (morseBad === 0 ? ", và mọi nhóm ký hiệu đều có trong bảng mã." : ", nhưng có " + morseBad + " nhóm ký hiệu không có trong bảng mã chuẩn."), morseTxt, null, null);
+      }
+
+      /* ----- URL encoding / quoted-printable / HTML entity / unicode escape ----- */
+      var pctCount = (s.match(/%[0-9a-fA-F]{2}/g) || []).length;
+      if (pctCount >= 1 && /%[0-9a-fA-F]{2}/.test(s)) {
+        var urlDec = null;
+        try { urlDec = decodeURIComponent(s.replace(/\+/g, "%20")); } catch (e) {
+          try { urlDec = s.replace(/%([0-9a-fA-F]{2})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); }); } catch (e2) {}
+        }
+        if (urlDec && urlDec !== s) add("URL encoding (percent-encoding)", pctCount >= 3 ? 90 : 68, "Có " + pctCount + " đoạn dạng <span class='mono'>%XX</span> — mỗi đoạn là một byte viết hex sau dấu %, kiểu mã hoá dùng trong URL và form web.", urlDec, null, null);
+      }
+      var qpCount = (s.match(/=[0-9a-fA-F]{2}/g) || []).length;
+      if (qpCount >= 3 && s.indexOf("%") < 0)
+        add("Quoted-printable (mã hoá email)", 62, "Có " + qpCount + " đoạn dạng <span class='mono'>=XX</span> — dấu hiệu của quoted-printable, kiểu mã hoá nội dung email cũ.", s.replace(/=([0-9a-fA-F]{2})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); }).replace(/=\r?\n/g, ""), null, null);
+      if (/&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);/.test(s)) {
+        var htmlDec = s.replace(/&#x([0-9a-fA-F]+);/g, function (m, h) { return String.fromCodePoint(parseInt(h, 16)); })
+          .replace(/&#(\d+);/g, function (m, d) { return String.fromCodePoint(parseInt(d, 10)); })
+          .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&apos;/g, "'").replace(/&nbsp;/g, " ");
+        add("HTML entities", 88, "Có các thực thể dạng <span class='mono'>&amp;…;</span> / <span class='mono'>&amp;#…;</span> — cách HTML/XML viết ký tự đặc biệt hoặc ký tự theo mã số.", htmlDec, null, null);
+      }
+      if (/\\u[0-9a-fA-F]{4}/.test(s) || /\\x[0-9a-fA-F]{2}/.test(s)) {
+        var uniDec = s.replace(/\\u\{([0-9a-fA-F]+)\}/g, function (m, h) { return String.fromCodePoint(parseInt(h, 16)); })
+          .replace(/\\u([0-9a-fA-F]{4})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); })
+          .replace(/\\x([0-9a-fA-F]{2})/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); });
+        add("Chuỗi thoát Unicode / hex (\\uXXXX, \\xXX)", 88, "Có các đoạn thoát kiểu <span class='mono'>\\uXXXX</span> hoặc <span class='mono'>\\xXX</span> — cách JavaScript/Python/C ghi ký tự trong mã nguồn.", uniDec, null, null);
+      }
+
+      /* ----- JSON / URL / UUID / timestamp ----- */
+      if ((s[0] === "{" || s[0] === "[") ) {
+        try {
+          var parsedJson = JSON.parse(s);
+          add("JSON", 96, "Bắt đầu bằng " + s[0] + " và parse được thành JSON hợp lệ (" + (Array.isArray(parsedJson) ? "mảng" : "đối tượng") + ").", JSON.stringify(parsedJson, null, 2).slice(0, 900), null, null);
+        } catch (e) {}
+      }
+      if (/^https?:\/\/\S+$/.test(s)) add("URL", 95, "Bắt đầu bằng <span class='mono'>" + escapeHtml(s.split(":")[0]) + "://</span> và có cấu trúc của một địa chỉ web.", null, null, null);
+      if (/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(compact))
+        add("UUID", 96, "Đúng khuôn 8-4-4-4-12 ký tự hex ngăn bằng gạch nối — định dạng định danh UUID/GUID. Đây là mã định danh, không phải dữ liệu bị mã hoá.", null, null, null);
+      if (/^\d{10}$/.test(compact) || /^\d{13}$/.test(compact)) {
+        var ms = compact.length === 13 ? parseInt(compact, 10) : parseInt(compact, 10) * 1000;
+        var dt = new Date(ms);
+        if (!isNaN(dt.getTime()) && dt.getFullYear() > 1990 && dt.getFullYear() < 2100)
+          add("Timestamp Unix (" + (compact.length === 13 ? "mili-giây" : "giây") + ")", 72, compact.length + " chữ số và khi đổi sang thời gian thì rơi vào " + dt.toLocaleString("vi-VN", { hour12: false }) + " — khoảng hợp lý cho một mốc thời gian thật.", dt.toISOString(), null, null);
+      }
+
+      /* ----- ROT / Caesar & đảo ngược ----- */
+      var lettersOnly = compact.replace(/[^a-zA-Z]/g, "");
+      if (lettersOnly.length >= 10 && /^[A-Za-z0-9_\-{}!.,;:'" ]+$/.test(s)) {
+        var origScore = idWordScore(s);
+        var rot13 = idRot(s, 13);
+        var rot13Score = idWordScore(rot13);
+        if (rot13Score > origScore) add("ROT13 (Caesar dịch 13)", 78, "Áp ROT13 thì văn bản chứa nhiều từ/khuôn quen thuộc hơn bản gốc (điểm từ quen thuộc " + rot13Score + " so với " + origScore + ") — ROT13 là Caesar với độ dịch 13, tự nó là phép ngược của chính nó.", rot13, null, null);
+        else {
+          // thử mọi độ dịch Caesar, lấy độ dịch cho điểm cao nhất
+          var bestN = 0, bestScore = origScore, bestTxt = "";
+          for (var rn = 1; rn < 26; rn++) {
+            if (rn === 13) continue;
+            var cand = idRot(s, rn), sc2 = idWordScore(cand);
+            if (sc2 > bestScore) { bestScore = sc2; bestN = rn; bestTxt = cand; }
+          }
+          if (bestN) add("Mã Caesar (dịch " + bestN + " ký tự để giải)", 58, "Thử cả 25 độ dịch Caesar thì độ dịch " + bestN + " cho văn bản có nhiều từ quen thuộc nhất (điểm " + bestScore + "). Caesar chỉ có 25 khả năng nên luôn đáng thử với văn bản toàn chữ cái bị xáo trộn.", bestTxt, null, null);
+          else add("ROT13 / Caesar (khả năng thấp)", 28, "Văn bản chủ yếu là chữ cái — luôn có thể là Caesar/ROT13, nhưng giải thử cả 25 độ dịch chưa độ dịch nào cho ra từ quen thuộc rõ rệt. Vẫn hiện bản ROT13 để bạn tự mắt kiểm tra.", rot13, null, null);
+        }
+        var reversed = s.split("").reverse().join("");
+        if (idWordScore(reversed) > origScore || /^\}/.test(reversed))
+          add("Chuỗi bị đảo ngược (reverse)", 60, "Đảo ngược toàn bộ chuỗi thì văn bản trông hợp lý hơn bản gốc" + (/^\}/.test(reversed) ? " (bản đảo bắt đầu bằng } — dấu hiệu flag bị viết ngược)" : "") + ".", reversed, null, null);
+      }
+
+      /* ----- XOR đơn byte: chỉ gợi ý khi có manh mối ----- */
+      if (isHex && hexBytes && idPrintableRatio(hexBytes) <= 0.9 && compact.length >= 16) {
+        // thử XOR từng byte 1..255, chấm điểm văn bản
+        var bestKey = -1, bestRatio = 0, bestBytes = null;
+        for (var xk = 1; xk < 256; xk++) {
+          var xb = new Uint8Array(hexBytes.length);
+          for (var xi = 0; xi < hexBytes.length; xi++) xb[xi] = hexBytes[xi] ^ xk;
+          var xr = idPrintableRatio(xb);
+          if (xr > bestRatio) { bestRatio = xr; bestKey = xk; bestBytes = xb; }
+        }
+        if (bestRatio > 0.95 && bestBytes && idWordScore(td.decode(bestBytes)) > 0)
+          add("XOR với khoá 1 byte (từ dữ liệu hex)", 64, "Thử XOR dữ liệu hex với từng khoá 1 byte (1-255) thì khoá <span class='mono'>0x" + bestKey.toString(16).toUpperCase() + " (" + bestKey + ")</span> cho ra văn bản đọc được — mẫu kinh điển của các bài crypto CTF vỡ lòng (như bài crackme-py dùng khoá suy từ một số nguyên).", idBytesPreview(bestBytes), bestBytes, null);
+      }
+
+      /* ----- Văn bản thường / không nhận ra ----- */
+      if (!results.length) {
+        var plainRatio = idPrintableRatio(te.encode(s));
+        if (/[^\x00-\x7F]/.test(s) || /\s/.test(s.trim()) && ent < 4.8)
+          add("Văn bản thường (plaintext)", 70, "Không khớp khuôn của định dạng mã hoá phổ biến nào; có khoảng trắng/ký tự đọc được và entropy thấp — nhiều khả năng đây đã là văn bản gốc, hoặc bị biến đổi bằng phép thay thế tự chế (Vigenère, thay thế đơn bảng…) cần phân tích tần suất thay vì nhận diện khuôn.", null, null, null);
+        else
+          add("Chưa nhận diện được — có thể là dữ liệu đã mã hoá thật hoặc định dạng lạ", 35, "Chuỗi không khớp khuôn Base64/Hex/hash/Morse… nào và entropy " + ent.toFixed(2) + " bit/ký tự. Dữ liệu đã mã hoá thật (AES, RSA) hoặc đã nén về bản chất không có khuôn nhận diện được từ bề mặt — muốn biết chắc phải có thêm ngữ cảnh: file này lấy từ đâu, kèm khoá/metadata gì không. Nếu đây là byte thô của một file, dùng tab Triage file hoặc Giải mã ảnh để soi magic bytes và strings.", null, null, null);
+      }
+
+      results.sort(function (a, b) { return b.conf - a.conf; });
+      elIdCount.textContent = results.length;
+      elIdStatus.textContent = "Đã phân tích xong — khả năng cao nhất: " + results[0].name + " (" + results[0].conf + "%).";
+      elIdStatus.className = "status ok";
+      elIdResultsWrap.style.display = "";
+
+      results.forEach(function (r) {
+        var item = document.createElement("div");
+        item.className = "detect-item";
+        var html = '<div class="detect-head"><span class="dname">' + escapeHtml(r.name) + "</span>" + idConfBadge(r.conf) + "</div>";
+        html += '<p class="detect-ev">' + r.evidence + "</p>";
+        if (r.decodedText !== null && r.decodedText !== undefined && r.decodedText !== "")
+          html += '<div class="detect-preview"><span class="plabel">Giải mã thử</span>' + escapeHtml(r.decodedText) + "</div>";
+        else if (r.decodedBytes)
+          html += '<div class="detect-preview"><span class="plabel">Dữ liệu đã giải — dạng hex</span>' + escapeHtml(bytesToHex(r.decodedBytes).slice(0, 400)) + "</div>";
+        item.innerHTML = html;
+        var btnRow = document.createElement("div");
+        btnRow.className = "btnrow";
+        var hasBtn = false;
+        if (r.decodedText) {
+          hasBtn = true;
+          var cpBtn = document.createElement("button");
+          cpBtn.className = "btn small"; cpBtn.type = "button"; cpBtn.textContent = "Sao chép kết quả giải mã";
+          (function (txt, b) { cpBtn.addEventListener("click", function () { copyText(txt, b); }); })(r.decodedText, cpBtn);
+          btnRow.appendChild(cpBtn);
+          if (r.decodedText.trim() !== s) {
+            var reBtn = document.createElement("button");
+            reBtn.className = "btn small"; reBtn.type = "button"; reBtn.textContent = "Dùng kết quả này làm input mới (bóc lớp tiếp)";
+            (function (txt) { reBtn.addEventListener("click", function () { elIdInput.value = txt.trim(); analyzeInput(); elIdInput.scrollIntoView({ behavior: "smooth", block: "center" }); }); })(r.decodedText);
+            btnRow.appendChild(reBtn);
+          }
+        }
+        if (r.decodedBytes) {
+          hasBtn = true;
+          var dlBtn = document.createElement("button");
+          dlBtn.className = "btn small"; dlBtn.type = "button"; dlBtn.textContent = "Tải dữ liệu đã giải (.bin)";
+          (function (bytes) { dlBtn.addEventListener("click", function () {
+            var blob = new Blob([bytes], { type: "application/octet-stream" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob); a.download = "decoded.bin";
+            document.body.appendChild(a); a.click();
+            setTimeout(function () { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 400);
+          }); })(r.decodedBytes);
+          btnRow.appendChild(dlBtn);
+        }
+        if (r.action) {
+          hasBtn = true;
+          var actBtn = document.createElement("button");
+          actBtn.className = "btn small primary"; actBtn.type = "button"; actBtn.textContent = r.action.label;
+          (function (act) { actBtn.addEventListener("click", function () { idApplyAction(act); }); })(r.action);
+          btnRow.appendChild(actBtn);
+        }
+        if (hasBtn) item.appendChild(btnRow);
+        elIdResults.appendChild(item);
+      });
+    }
+    function idApplyAction(act) {
+      if (!act) return;
+      if (act.reuseText) {
+        elIdInput.value = act.reuseText;
+        analyzeInput();
+        elIdInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      if (act.jwt) {
+        elToken.value = elIdInput.value.trim();
+        document.querySelector('[data-tab="jwt"]').click();
+        elToken.dispatchEvent(new Event("input"));
+        return;
+      }
+      if (act.rsaKey) {
+        elRsaKey.value = elIdInput.value.trim();
+        document.querySelector('[data-tab="rsa"]').click();
+        refreshRsaKey();
+        return;
+      }
+      if (act.crackHash) {
+        elCrackMode.value = "raw";
+        updateCrackMode();
+        elCrackHash.value = act.crackHash;
+        if (act.crackAlgo) elCrackAlgo.value = act.crackAlgo;
+        updateHashStatus();
+        document.querySelector('[data-tab="crack"]').click();
+        return;
+      }
+      if (act.hcMode) {
+        hcType.value = act.hcMode;
+        hcBuild();
+        document.querySelector('[data-tab="hashcat"]').click();
+        return;
+      }
+      if (act.tab) document.querySelector('[data-tab="' + act.tab + '"]').click();
+    }
+    var idTimer = null;
+    elIdInput.addEventListener("input", function () {
+      clearTimeout(idTimer);
+      idTimer = setTimeout(analyzeInput, 180);
+    });
+    elIdInput.addEventListener("paste", function () {
+      setTimeout(analyzeInput, 30);
     });
     </script>
   </body>
