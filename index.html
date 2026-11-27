@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -43,7 +43,10 @@
       /* ---------- Tabs ---------- */
       .tabs{
         display:flex; flex-wrap:wrap; gap:8px;
-        border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:14px;
+        border-bottom:1px solid var(--line); padding:12px 0 10px; margin-bottom:16px;
+      }
+      @media (min-width:901px){
+        .tabs{ position:sticky; top:0; z-index:30; background:var(--bg); }
       }
       .tab{
         appearance:none; border:1px solid var(--line); background:var(--panel);
@@ -56,14 +59,18 @@
       .panel{ display:none; }
       .panel.active{ display:block; }
 
-      h2{ font-size:19px; margin:0 0 14px; letter-spacing:-0.01em; }
+      h2{ font-size:19px; margin:0 0 16px; letter-spacing:-0.01em; padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+      h2.results-title{ font-size:16px; margin:0 0 12px; padding-bottom:0; border-bottom:none; }
+      .sample-label{ font-size:13px; color:var(--faint); align-self:center; }
+      .span-all{ grid-column:1 / -1; }
 
       .card{
         background:var(--panel); border:1px solid var(--line-soft);
         border-radius:var(--radius); padding:14px 16px; margin-bottom:16px;
       }
-      /* ---------- Bố cục 2 cột (rộng: 2 cột, hẹp: gập 1 cột) ---------- */
-      .cols2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:stretch; }
+      /* ---------- Two-column layout (wide: 2 columns, narrow: 1 column) ---------- */
+      .cols2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:stretch; margin-bottom:16px; }
+      .panel > .cols2:last-child{ margin-bottom:0; }
       .col-stack{ display:flex; flex-direction:column; gap:16px; min-width:0; }
       .col-stack > .card{ margin-bottom:0; }
       .col-stack > .card:last-child{ flex:1; }
@@ -86,7 +93,7 @@
       textarea.mono, input.mono, .mono{ font-family:var(--mono); font-size:13px; }
       textarea::placeholder, input::placeholder{ color:var(--faint); }
       input[type="text"], input[type="password"], select{ height:44px; }
-      /* Tab Chuyển đổi: mọi ô nhập/xuất theo cùng một chuẩn kích thước */
+      /* Converters tab: all input/output fields share one size standard */
       #panel-conv textarea{ height:120px; }
       #panel-conv .card-cols > div > label.flabel:not(:first-child){ margin-top:16px; }
       #panel-conv .conv-top{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; margin-bottom:16px; }
@@ -169,7 +176,7 @@
       .hidden-input{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
       .divider{ border:none; border-top:1px solid var(--line-soft); margin:20px 0; }
 
-      /* ---------- Bit planes (tab Giải mã ảnh) ---------- */
+      /* ---------- Bit planes (Image Steganography tab) ---------- */
       .planes{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
       @media (max-width:900px){ .planes{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
       .plane{ margin:0; min-width:0; }
@@ -179,7 +186,7 @@
       }
       .plane figcaption{ text-align:center; font-size:12.5px; color:var(--muted); margin-top:5px; font-family:var(--mono); }
 
-      /* ---------- Phân tích input ---------- */
+      /* ---------- Magic Identifier ---------- */
       .detect-list{ display:flex; flex-direction:column; gap:12px; }
       .detect-item{ background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius); padding:14px 16px; }
       .detect-head{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
@@ -201,9 +208,9 @@
       .img-meta{ font-size:12.5px; color:var(--muted); font-family:var(--mono); margin-top:6px; }
       .sample-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
 
-      /* ---------- Hai cột cho luồng convert nhiều tầng ---------- */
+      /* ---------- Two columns for multi-layer conversion flows ---------- */
       .cols2.start{ align-items:start; }
-      /* Tab Chuyển đổi: Base64 và Hex đặt cạnh nhau, HMAC trải ngang dưới */
+      /* Converters tab: Base64 and Hex side by side, HMAC full width below */
       .conv-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
       .conv-grid > .card{ margin-bottom:0; min-width:0; }
       .conv-grid > .card.wide{ grid-column:1 / -1; }
@@ -216,25 +223,25 @@
         #panel-conv .conv-grid > .card.wide .card-cols{ grid-template-columns:1fr; }
         #panel-conv .conv-grid > .card.wide .conv-top{ grid-template-columns:1fr; }
       }
-      /* Tab Phân tích input: cột trái (input + đặc điểm) dính khi cuộn,
-         để bóc từng lớp mã hoá mà không phải cuộn lên xuống */
-      .id-side{ position:sticky; top:14px; }
+      /* Magic Identifier tab: left column (input + characteristics) sticks while scrolling,
+         so layers can be peeled without scrolling up and down */
+      .id-side{ position:sticky; top:76px; }
       @media (max-width:900px){ .id-side{ position:static; } }
     </style>
   </head>
   <body>
     <div class="wrap">
 
-      <nav class="tabs" role="tablist" aria-label="Danh sách công cụ">
+      <nav class="tabs" role="tablist" aria-label="Tools">
         <button class="tab" role="tab" aria-selected="true" data-tab="jwt">JWT Workbench</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="crack">Dò hash tổng quát</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="hashcat">Tạo lệnh hashcat</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="triage">Triage file</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="conv">Chuyển đổi</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="rsa">Giải mã RSA</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="stego">Giải mã ảnh</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="cupp">CUPP · Tạo wordlist</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="identify">Phân tích input</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="crack">Hash Cracker</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="hashcat">Hashcat Command Builder</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="triage">File Triage</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="conv">Encoding & Conversion</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="rsa">RSA Decryption</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="stego">Image Steganography</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="cupp">CUPP Wordlist Generator</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="identify">Magic Identifier</button>
       </nav>
 
       <!-- ================= JWT WORKBENCH ================= -->
@@ -246,26 +253,26 @@
             <div class="card">
               <label class="flabel" for="jwt-token">Token</label>
               <textarea class="mono" id="jwt-token" rows="5" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3aWVuZXIiLCJpYXQiOjE1MTYyMzkwMjJ9...."></textarea>
-              <div class="status dim" id="jwt-status">Chưa có token.</div>
-              <label class="flabel" for="jwt-sig" style="margin-top:12px;">Đoạn chữ ký (segment 3)</label>
+              <div class="status dim" id="jwt-status">No token yet.</div>
+              <label class="flabel" for="jwt-sig" style="margin-top:12px;">Signature (segment 3)</label>
               <div class="outrow">
                 <input class="mono" type="text" id="jwt-sig" readonly placeholder="—" />
-                <button class="btn small" id="jwt-sig-copy" type="button">Sao chép</button>
+                <button class="btn small" id="jwt-sig-copy" type="button">Copy</button>
               </div>
             </div>
 
             <div class="card">
-              <h3>Ký &amp; biến đổi</h3>
-              <label class="flabel" for="jwt-secret">Khóa bí mật (secret) cho HS256</label>
-              <input type="text" id="jwt-secret" class="mono" autocomplete="off" placeholder="ví dụ: secret1" />
+              <h3>Sign &amp; Transform</h3>
+              <label class="flabel" for="jwt-secret">HMAC secret for HS256</label>
+              <input type="text" id="jwt-secret" class="mono" autocomplete="off" placeholder="e.g. secret1" />
               <label class="checkline">
                 <input type="checkbox" id="jwt-secret-b64" />
-                Khóa đã mã hoá Base64 (tự giải mã trước khi ký)
+                Secret is Base64-encoded (decoded before signing)
               </label>
               <div class="btnrow">
-                <button class="btn primary" id="jwt-sign" type="button">Ký lại HS256</button>
-                <button class="btn" id="jwt-verify" type="button">Kiểm chứng chữ ký</button>
-                <button class="btn" id="jwt-keepsig" type="button">Giữ nguyên chữ ký cũ</button>
+                <button class="btn primary" id="jwt-sign" type="button">Sign with HS256</button>
+                <button class="btn" id="jwt-verify" type="button">Verify Signature</button>
+                <button class="btn" id="jwt-keepsig" type="button">Keep Original Signature</button>
               </div>
               <div class="status" id="jwt-action-status"></div>
               <div style="margin-top:8px;"><span class="badge none" id="jwt-verify-badge" style="display:none;"></span></div>
@@ -282,44 +289,44 @@
               <textarea class="mono" id="jwt-payload" rows="7" spellcheck="false" placeholder='{"sub":"wiener"}'></textarea>
             </div>
             <div class="card" id="jwt-claims-card" style="display:none;">
-              <h3>Mốc thời gian trong payload</h3>
+              <h3>Payload Time Claims</h3>
               <div class="claims" id="jwt-claims"></div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ================= CRACKER / DÒ HASH TỔNG QUÁT ================= -->
+      <!-- ================= HASH CRACKER ================= -->
       <section class="panel" id="panel-crack" role="tabpanel">
-        <h2>Dò hash tổng quát</h2>
+        <h2>Hash Cracker</h2>
 
         <div class="cols2">
           <div class="col-stack">
             <div class="card">
-              <h3>Đầu vào cần dò</h3>
-              <label class="flabel" for="crack-mode">Chế độ đầu vào</label>
+              <h3>Target</h3>
+              <label class="flabel" for="crack-mode">Input type</label>
               <select id="crack-mode">
-                <option value="jwt">JWT HS256 — dán nguyên token</option>
-                <option value="raw">Hash thô dạng hex — MD5 / SHA-1 / SHA-256 / SHA-512 / NTLM</option>
+                <option value="jwt">JWT HS256 — paste the full token</option>
+                <option value="raw">Raw hex hash — MD5 / SHA-1 / SHA-256 / SHA-512 / NTLM</option>
               </select>
 
               <div id="crack-jwt-box" style="margin-top:14px;">
-                <label class="flabel" for="crack-token">Token HS256 cần dò khóa</label>
+                <label class="flabel" for="crack-token">HS256 token to crack</label>
                 <textarea class="mono" id="crack-token" rows="4" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiIs..."></textarea>
                 <div class="btnrow">
-                  <button class="btn small" id="crack-from-jwt" type="button">Lấy token từ JWT Workbench</button>
+                  <button class="btn small" id="crack-from-jwt" type="button">Import from JWT Workbench</button>
                 </div>
                 <div class="status dim" id="crack-token-status"></div>
               </div>
 
               <div id="crack-raw-box" style="margin-top:14px; display:none;">
-                <label class="flabel" for="crack-hash">Hash đích (hex)</label>
+                <label class="flabel" for="crack-hash">Target hash (hex)</label>
                 <textarea class="mono" id="crack-hash" rows="3" spellcheck="false" placeholder="5f4dcc3b5aa765d61d8327deb882cf99"></textarea>
-                <label class="flabel" for="crack-algo" style="margin-top:12px;">Thuật toán</label>
+                <label class="flabel" for="crack-algo" style="margin-top:12px;">Algorithm</label>
                 <select id="crack-algo">
-                  <option value="auto">Tự nhận diện theo độ dài hex</option>
+                  <option value="auto">Auto-detect from hex length</option>
                   <option value="md5">MD5</option>
-                  <option value="ntlm">NTLM (MD4 trên UTF-16LE)</option>
+                  <option value="ntlm">NTLM (MD4 over UTF-16LE)</option>
                   <option value="sha1">SHA-1</option>
                   <option value="sha256">SHA-256</option>
                   <option value="sha512">SHA-512</option>
@@ -333,46 +340,46 @@
             <div class="card">
               <h3>Wordlist</h3>
               <div class="btnrow" style="margin:0 0 10px;">
-                <button class="btn" id="crack-file-btn" type="button">Nạp file wordlist…</button>
+                <button class="btn" id="crack-file-btn" type="button">Load wordlist file…</button>
                 <input class="hidden-input" type="file" id="crack-file" accept=".txt,.list,.dic,text/plain" />
               </div>
-              <label class="flabel" for="crack-wordlist">Hoặc dán danh sách ứng viên (mỗi dòng một mật khẩu / khóa)</label>
+              <label class="flabel" for="crack-wordlist">Or paste candidates (one password / key per line)</label>
               <textarea class="mono" id="crack-wordlist" rows="9" spellcheck="false" placeholder="secret&#10;secret1&#10;password&#10;key123"></textarea>
-              <div class="status dim" id="crack-wl-status">Chưa có ứng viên nào trong danh sách.</div>
+              <div class="status dim" id="crack-wl-status">No candidates yet.</div>
             </div>
           </div>
         </div>
 
-        <div class="card" style="margin-top:16px;">
-          <h3>Chạy dò &amp; kết quả</h3>
+        <div class="card">
+          <h3>Run &amp; Results</h3>
           <div class="btnrow" style="margin-top:0;">
-            <button class="btn primary" id="crack-start" type="button">Bắt đầu dò</button>
-            <button class="btn danger" id="crack-stop" type="button" disabled>Dừng</button>
+            <button class="btn primary" id="crack-start" type="button">Start Cracking</button>
+            <button class="btn danger" id="crack-stop" type="button" disabled>Stop</button>
           </div>
           <div style="margin-top:14px;">
             <progress id="crack-progress" value="0" max="100"></progress>
-            <div class="status dim" id="crack-progress-text">Sẵn sàng.</div>
+            <div class="status dim" id="crack-progress-text">Ready.</div>
           </div>
           <div class="found" id="crack-found">
-            <div style="font-size:13px; color:var(--muted);" id="crack-found-label">Tìm thấy:</div>
+            <div style="font-size:13px; color:var(--muted);" id="crack-found-label">Found:</div>
             <div class="key" id="crack-found-key"></div>
             <div class="btnrow">
-              <button class="btn small" id="crack-found-copy" type="button">Sao chép kết quả</button>
-              <button class="btn small" id="crack-found-use" type="button">Mang sang JWT Workbench để ký lại</button>
+              <button class="btn small" id="crack-found-copy" type="button">Copy Result</button>
+              <button class="btn small" id="crack-found-use" type="button">Send to JWT Workbench</button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ================= TẠO LỆNH HASHCAT ================= -->
+      <!-- ================= HASHCAT COMMAND BUILDER ================= -->
       <section class="panel" id="panel-hashcat" role="tabpanel">
-        <h2>Tạo lệnh hashcat</h2>
+        <h2>Hashcat Command Builder</h2>
 
         <div class="cols2">
           <div class="col-stack">
             <div class="card">
-              <h3>Tham số</h3>
-              <label class="flabel" for="hc-type">Loại hash (số mode của hashcat)</label>
+              <h3>Parameters</h3>
+              <label class="flabel" for="hc-type">Hash type (hashcat mode)</label>
               <select id="hc-type">
                 <option value="0">MD5 — mode 0</option>
                 <option value="100">SHA-1 — mode 100</option>
@@ -383,37 +390,37 @@
                 <option value="3200">bcrypt — mode 3200</option>
                 <option value="500">md5crypt (MD5 Unix crypt) — mode 500</option>
                 <option value="1800">sha512crypt (SHA-512 Unix crypt) — mode 1800</option>
-                <option value="300">MySQL5 (SHA-1 kép) — mode 300</option>
+                <option value="300">MySQL5 (double SHA-1) — mode 300</option>
                 <option value="400">WordPress phpass — mode 400</option>
                 <option value="10000">Django SHA-256 (pbkdf2) — mode 10000</option>
                 <option value="13100">Kerberos 5 TGS-REP etype 23 — mode 13100</option>
                 <option value="18200">Kerberos 5 AS-REP etype 23 — mode 18200</option>
                 <option value="22000">WPA-PBKDF2-PMKID+EAPOL — mode 22000</option>
               </select>
-              <label class="flabel" for="hc-hashfile" style="margin-top:12px;">Tên file chứa hash</label>
+              <label class="flabel" for="hc-hashfile" style="margin-top:12px;">Hash file name</label>
               <input type="text" id="hc-hashfile" class="mono" value="hash.txt" autocomplete="off" />
-              <label class="flabel" for="hc-wordlist" style="margin-top:12px;">Tên file wordlist</label>
+              <label class="flabel" for="hc-wordlist" style="margin-top:12px;">Wordlist file name</label>
               <input type="text" id="hc-wordlist" class="mono" value="wordlist.txt" autocomplete="off" />
-              <label class="flabel" for="hc-rules" style="margin-top:12px;">Tên file rules (tuỳ chọn, để trống nếu không dùng)</label>
-              <input type="text" id="hc-rules" class="mono" placeholder="ví dụ: best64.rule" autocomplete="off" />
+              <label class="flabel" for="hc-rules" style="margin-top:12px;">Rules file name (optional)</label>
+              <input type="text" id="hc-rules" class="mono" placeholder="e.g. best64.rule" autocomplete="off" />
             </div>
           </div>
 
           <div class="col-stack">
             <div class="card">
-              <h3>Lệnh dò (tấn công từ điển)</h3>
-              <label class="flabel" for="hc-cmd">Dòng lệnh hoàn chỉnh</label>
+              <h3>Dictionary attack command</h3>
+              <label class="flabel" for="hc-cmd">Full command line</label>
               <div class="outrow">
                 <textarea class="mono" id="hc-cmd" rows="3" readonly spellcheck="false"></textarea>
-                <button class="btn small" id="hc-copy" type="button">Sao chép</button>
+                <button class="btn small" id="hc-copy" type="button">Copy</button>
               </div>
             </div>
             <div class="card">
-              <h3>Xem lại kết quả đã dò được</h3>
-              <label class="flabel" for="hc-cmd-show">Biến thể có --show</label>
+              <h3>Show cracked results</h3>
+              <label class="flabel" for="hc-cmd-show">Variant with --show</label>
               <div class="outrow">
                 <textarea class="mono" id="hc-cmd-show" rows="3" readonly spellcheck="false"></textarea>
-                <button class="btn small" id="hc-copy-show" type="button">Sao chép</button>
+                <button class="btn small" id="hc-copy-show" type="button">Copy</button>
               </div>
             </div>
           </div>
@@ -422,36 +429,36 @@
 
       <!-- ================= TRIAGE ================= -->
       <section class="panel" id="panel-triage" role="tabpanel">
-        <h2>Triage file</h2>
+        <h2>File Triage</h2>
 
-        <div class="dropzone" id="triage-drop" role="button" tabindex="0" aria-label="Chọn file để triage">
-          <strong>Thả file vào đây</strong>
-          hoặc bấm để chọn file từ máy
+        <div class="dropzone" id="triage-drop" role="button" tabindex="0" aria-label="Choose a file to triage">
+          <strong>Drop a file here</strong>
+          or click to browse
         </div>
         <input class="hidden-input" type="file" id="triage-file" />
 
         <div id="triage-result" style="display:none; margin-top:16px;">
           <div class="card" id="tr-img-card" style="display:none;">
-            <h3>Ảnh</h3>
-            <img class="img-preview" id="tr-img" alt="Ảnh trong file" style="margin-top:0;" />
+            <h3>Image</h3>
+            <img class="img-preview" id="tr-img" alt="Image contained in file" style="margin-top:0;" />
             <div class="img-meta" id="tr-img-meta"></div>
           </div>
           <div class="cols2">
             <div class="card">
-              <h3>Thông tin tổng quan</h3>
+              <h3>Overview</h3>
               <dl class="kv">
-                <dt>Tên file</dt><dd id="tr-name">—</dd>
-                <dt>Dung lượng</dt><dd id="tr-size">—</dd>
-                <dt>Loại (MIME)</dt><dd id="tr-type">—</dd>
-                <dt>16 byte đầu (hex)</dt><dd id="tr-head">—</dd>
+                <dt>File name</dt><dd id="tr-name">—</dd>
+                <dt>Size</dt><dd id="tr-size">—</dd>
+                <dt>Type (MIME)</dt><dd id="tr-type">—</dd>
+                <dt>First 16 bytes (hex)</dt><dd id="tr-head">—</dd>
                 <dt>SHA-256</dt>
                 <dd><span id="tr-sha">—</span>
-                  <button class="btn small" id="tr-sha-copy" type="button" style="margin-left:8px;">Sao chép</button>
+                  <button class="btn small" id="tr-sha-copy" type="button" style="margin-left:8px;">Copy</button>
                 </dd>
               </dl>
             </div>
             <div class="card">
-              <label class="flabel">Chuỗi in được (ASCII, dài ≥ 4) — <span id="tr-strings-count">0</span> chuỗi</label>
+              <label class="flabel">Printable strings (ASCII, length ≥ 4) — <span id="tr-strings-count">0</span> strings</label>
               <div class="strings-box" id="tr-strings">—</div>
             </div>
           </div>
@@ -460,31 +467,31 @@
 
       <!-- ================= CONVERTERS ================= -->
       <section class="panel" id="panel-conv" role="tabpanel">
-        <h2>Chuyển đổi lặt vặt</h2>
+        <h2>Encoding & Conversion</h2>
 
         <div class="conv-grid">
         <div class="card">
-          <h3>Base64 / Base64URL ↔ văn bản</h3>
+          <h3>Base64 / Base64URL ↔ Text</h3>
           <div class="conv-top">
             <div>
-              <label class="flabel" for="b64-mode">Định dạng</label>
+              <label class="flabel" for="b64-mode">Variant</label>
               <select id="b64-mode">
-                <option value="std">Base64 thường (+ / và dấu =)</option>
-                <option value="url">Base64URL (− _ , không đệm)</option>
+                <option value="std">Standard Base64 (+ / with = padding)</option>
+                <option value="url">Base64URL (− _ , no padding)</option>
               </select>
             </div>
           </div>
           <div class="card-cols">
             <div>
-              <label class="flabel" for="b64-in">Văn bản gốc (gõ vào đây để mã hoá)</label>
-              <textarea class="mono" id="b64-in" rows="5" spellcheck="false" placeholder="Văn bản hoặc chuỗi Base64…"></textarea>
+              <label class="flabel" for="b64-in">Plain text (type here to encode)</label>
+              <textarea class="mono" id="b64-in" rows="5" spellcheck="false" placeholder="Text or a Base64 string…"></textarea>
               <div class="status dim" id="b64-status"></div>
             </div>
             <div>
-              <label class="flabel" for="b64-out">Dạng mã hoá (gõ vào đây để giải mã ngược)</label>
+              <label class="flabel" for="b64-out">Encoded (type here to decode)</label>
               <div class="outrow">
-                <textarea class="mono" id="b64-out" rows="5" spellcheck="false" placeholder="Chuỗi Base64 sẽ hiện ở đây…"></textarea>
-                <button class="btn small" data-copy="b64-out" type="button">Sao chép</button>
+                <textarea class="mono" id="b64-out" rows="5" spellcheck="false" placeholder="Base64 output appears here…"></textarea>
+                <button class="btn small" data-copy="b64-out" type="button">Copy</button>
               </div>
               <div class="status dim"></div>
             </div>
@@ -492,18 +499,18 @@
         </div>
 
         <div class="card">
-          <h3>Hex ↔ văn bản</h3>
+          <h3>Hex ↔ Text</h3>
           <div class="card-cols">
             <div>
-              <label class="flabel" for="hex-in">Văn bản gốc (gõ vào đây để mã hoá)</label>
-              <textarea class="mono" id="hex-in" rows="5" spellcheck="false" placeholder="Văn bản hoặc dãy hex (có khoảng trắng cũng được)…"></textarea>
+              <label class="flabel" for="hex-in">Plain text (type here to encode)</label>
+              <textarea class="mono" id="hex-in" rows="5" spellcheck="false" placeholder="Text or a hex string (spaces allowed)…"></textarea>
               <div class="status dim" id="hex-status"></div>
             </div>
             <div>
-              <label class="flabel" for="hex-out">Dạng hex (gõ vào đây để giải mã ngược)</label>
+              <label class="flabel" for="hex-out">Hex (type here to decode)</label>
               <div class="outrow">
-                <textarea class="mono" id="hex-out" rows="5" spellcheck="false" placeholder="Dãy hex sẽ hiện ở đây…"></textarea>
-                <button class="btn small" data-copy="hex-out" type="button">Sao chép</button>
+                <textarea class="mono" id="hex-out" rows="5" spellcheck="false" placeholder="Hex output appears here…"></textarea>
+                <button class="btn small" data-copy="hex-out" type="button">Copy</button>
               </div>
               <div class="status dim"></div>
             </div>
@@ -511,29 +518,29 @@
         </div>
 
         <div class="card wide">
-          <h3>Máy tính HMAC-SHA256</h3>
+          <h3>HMAC-SHA256 Calculator</h3>
           <div class="conv-top">
-            <div>
-              <label class="flabel" for="hmac-key">Khóa</label>
+            <div class="span-all">
+              <label class="flabel" for="hmac-key">Key</label>
               <input type="text" id="hmac-key" class="mono" autocomplete="off" placeholder="secret1" />
             </div>
           </div>
           <div class="card-cols">
             <div>
-              <label class="flabel" for="hmac-msg">Thông điệp</label>
+              <label class="flabel" for="hmac-msg">Message</label>
               <textarea class="mono" id="hmac-msg" rows="5" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbmlzdHJhdG9yIn0"></textarea>
               
             </div>
             <div>
-              <label class="flabel" for="hmac-hex">Kết quả dạng hex</label>
+              <label class="flabel" for="hmac-hex">Result (hex)</label>
               <div class="outrow">
                 <input type="text" id="hmac-hex" class="mono" readonly />
-                <button class="btn small" data-copy="hmac-hex" type="button">Sao chép</button>
+                <button class="btn small" data-copy="hmac-hex" type="button">Copy</button>
               </div>
-              <label class="flabel" for="hmac-b64">Kết quả dạng Base64URL (dạng dùng trong JWT)</label>
+              <label class="flabel" for="hmac-b64">Result (Base64URL, as used in JWT)</label>
               <div class="outrow">
                 <input type="text" id="hmac-b64" class="mono" readonly />
-                <button class="btn small" data-copy="hmac-b64" type="button">Sao chép</button>
+                <button class="btn small" data-copy="hmac-b64" type="button">Copy</button>
               </div>
             </div>
           </div>
@@ -543,33 +550,33 @@
 
       <!-- ================= GIẢI MÃ RSA ================= -->
       <section class="panel" id="panel-rsa" role="tabpanel">
-        <h2>Giải mã RSA</h2>
+        <h2>RSA Decryption</h2>
 
         <div class="cols2">
           <div class="col-stack">
             <div class="card">
               <h3>Private key (PEM)</h3>
-              <label class="flabel" for="rsa-key">Dán nguyên văn đoạn khoá, gồm cả dòng BEGIN / END</label>
+              <label class="flabel" for="rsa-key">Paste the full key, including the BEGIN / END lines</label>
               <textarea class="mono" id="rsa-key" rows="10" spellcheck="false" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;MIIE...&#10;-----END RSA PRIVATE KEY-----"></textarea>
               <div class="btnrow">
-                <button class="btn small" id="rsa-key-file-btn" type="button">Nạp file khoá (.pem / .key)…</button>
+                <button class="btn small" id="rsa-key-file-btn" type="button">Load key file (.pem / .key)…</button>
                 <input class="hidden-input" type="file" id="rsa-key-file" accept=".pem,.key,.txt" />
               </div>
-              <div class="status dim" id="rsa-key-status">Chưa có khoá.</div>
+              <div class="status dim" id="rsa-key-status">No key loaded.</div>
             </div>
 
             <div class="card">
-              <h3>Kiểu đệm (padding)</h3>
-              <label class="flabel" for="rsa-padding">Padding lúc mã hoá</label>
+              <h3>Padding</h3>
+              <label class="flabel" for="rsa-padding">Padding used at encryption</label>
               <select id="rsa-padding">
-                <option value="pkcs1" selected>PKCS#1 v1.5 (RSAES-PKCS1-V1_5) — phổ biến nhất trong CTF</option>
+                <option value="pkcs1" selected>PKCS#1 v1.5 (RSAES-PKCS1-V1_5) — most common in CTF</option>
                 <option value="oaep">OAEP</option>
-                <option value="raw">Không đệm (raw / textbook RSA)</option>
+                <option value="raw">No padding (raw / textbook RSA)</option>
               </select>
               <div id="rsa-oaep-box" style="display:none; margin-top:12px;">
-                <label class="flabel" for="rsa-oaep-hash">Hàm băm của OAEP (dùng cho cả MGF1)</label>
+                <label class="flabel" for="rsa-oaep-hash">OAEP hash function (also used for MGF1)</label>
                 <select id="rsa-oaep-hash">
-                  <option value="sha1" selected>SHA-1 (mặc định của nhiều thư viện)</option>
+                  <option value="sha1" selected>SHA-1 (default in many libraries)</option>
                   <option value="sha256">SHA-256</option>
                   <option value="sha512">SHA-512</option>
                 </select>
@@ -579,82 +586,82 @@
 
           <div class="col-stack">
             <div class="card">
-              <h3>Bản mã (.enc)</h3>
-              <div class="dropzone" id="rsa-drop" role="button" tabindex="0" aria-label="Chọn file bản mã .enc">
-                <strong>Thả file .enc vào đây</strong>
-                hoặc bấm để chọn file từ máy
+              <h3>Ciphertext (.enc)</h3>
+              <div class="dropzone" id="rsa-drop" role="button" tabindex="0" aria-label="Choose a ciphertext file">
+                <strong>Drop the .enc file here</strong>
+                or click to browse
               </div>
               <input class="hidden-input" type="file" id="rsa-file" />
-              <div class="status dim" id="rsa-file-status">Chưa nạp file nào.</div>
-              <label class="flabel" for="rsa-ct-format" style="margin-top:12px;">Định dạng bản mã</label>
+              <div class="status dim" id="rsa-file-status">No file loaded.</div>
+              <label class="flabel" for="rsa-ct-format" style="margin-top:12px;">Ciphertext format</label>
               <select id="rsa-ct-format">
-                <option value="auto" selected>Tự nhận diện (file = byte thô; ô dán = hex hoặc Base64)</option>
-                <option value="raw">Byte thô (chỉ dùng với file)</option>
+                <option value="auto" selected>Auto-detect (file = raw bytes; pasted = hex or Base64)</option>
+                <option value="raw">Raw bytes (file only)</option>
                 <option value="hex">Hex</option>
                 <option value="base64">Base64</option>
               </select>
-              <label class="flabel" for="rsa-ct-text" style="margin-top:12px;">Hoặc dán bản mã dạng hex / Base64 (ưu tiên hơn file)</label>
-              <textarea class="mono" id="rsa-ct-text" rows="5" spellcheck="false" placeholder="a1b2c3… hoặc Base64…"></textarea>
+              <label class="flabel" for="rsa-ct-text" style="margin-top:12px;">Or paste ciphertext as hex / Base64 (takes precedence over file)</label>
+              <textarea class="mono" id="rsa-ct-text" rows="5" spellcheck="false" placeholder="a1b2c3… or Base64…"></textarea>
             </div>
 
             <div class="card">
-              <h3>Kết quả giải mã</h3>
+              <h3>Decryption Result</h3>
               <div class="btnrow" style="margin-top:0;">
-                <button class="btn primary" id="rsa-decrypt" type="button">Giải mã</button>
-                <button class="btn" id="rsa-download" type="button" disabled>Tải bản rõ về (.bin)</button>
+                <button class="btn primary" id="rsa-decrypt" type="button">Decrypt</button>
+                <button class="btn" id="rsa-download" type="button" disabled>Download plaintext (.bin)</button>
               </div>
               <div class="status" id="rsa-status"></div>
-              <label class="flabel" for="rsa-pt-text" style="margin-top:12px;">Bản rõ dạng văn bản</label>
+              <label class="flabel" for="rsa-pt-text" style="margin-top:12px;">Plaintext (text)</label>
               <div class="outrow">
-                <textarea class="mono" id="rsa-pt-text" rows="6" readonly spellcheck="false" placeholder="Flag / bản rõ sẽ hiện ở đây…"></textarea>
-                <button class="btn small" id="rsa-pt-copy" type="button">Sao chép</button>
+                <textarea class="mono" id="rsa-pt-text" rows="6" readonly spellcheck="false" placeholder="Flag / plaintext appears here…"></textarea>
+                <button class="btn small" id="rsa-pt-copy" type="button">Copy</button>
               </div>
               <div id="rsa-pt-img-wrap" style="display:none;">
-                <label class="flabel" style="margin-top:12px;">Bản rõ là ảnh</label>
-                <img class="img-preview" id="rsa-pt-img" alt="Bản rõ dạng ảnh" style="margin-top:0;" />
+                <label class="flabel" style="margin-top:12px;">Plaintext is an image</label>
+                <img class="img-preview" id="rsa-pt-img" alt="Plaintext image" style="margin-top:0;" />
                 <div class="img-meta" id="rsa-pt-img-meta"></div>
               </div>
-              <label class="flabel" for="rsa-pt-hex" style="margin-top:12px;">Bản rõ dạng hex</label>
+              <label class="flabel" for="rsa-pt-hex" style="margin-top:12px;">Plaintext (hex)</label>
               <div class="outrow">
                 <input type="text" id="rsa-pt-hex" class="mono" readonly placeholder="—" />
-                <button class="btn small" id="rsa-pt-hex-copy" type="button">Sao chép</button>
+                <button class="btn small" id="rsa-pt-hex-copy" type="button">Copy</button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ================= GIẢI MÃ ẢNH / STEGO ================= -->
+      <!-- ================= IMAGE STEGANOGRAPHY ================= -->
       <section class="panel" id="panel-stego" role="tabpanel">
-        <h2>Giải mã ảnh (Steganography)</h2>
+        <h2>Image Steganography</h2>
 
-        <div class="dropzone" id="stego-drop" role="button" tabindex="0" aria-label="Chọn file ảnh để phân tích">
-          <strong>Thả file ảnh vào đây</strong>
-          hoặc bấm để chọn file từ máy
+        <div class="dropzone" id="stego-drop" role="button" tabindex="0" aria-label="Choose an image to analyze">
+          <strong>Drop an image file here</strong>
+          or click to browse
         </div>
         <input class="hidden-input" type="file" id="stego-file" accept="image/*,.png,.jpg,.jpeg,.gif,.bmp,.webp" />
 
         <div id="stego-result" style="display:none; margin-top:16px;">
           <div class="found" id="st-flag-box">
-            <div style="font-size:13px; color:var(--muted);">Chuỗi giống flag tìm thấy trong ảnh:</div>
+            <div style="font-size:13px; color:var(--muted);">Flag-like string found in image:</div>
             <div class="key" id="st-flag-text"></div>
           </div>
 
           <div class="card" id="st-orig-card" style="display:none;">
-            <h3>Ảnh gốc</h3>
-            <img class="img-preview" id="st-orig-img" alt="Ảnh gốc" style="margin-top:0;" />
+            <h3>Original Image</h3>
+            <img class="img-preview" id="st-orig-img" alt="Original Image" style="margin-top:0;" />
             <div class="img-meta" id="st-orig-meta"></div>
           </div>
 
           <div class="cols2">
             <div class="card">
-              <h3>Thông tin tổng quan</h3>
+              <h3>Overview</h3>
               <dl class="kv">
-                <dt>Tên file</dt><dd id="st-name">—</dd>
-                <dt>Dung lượng</dt><dd id="st-size">—</dd>
-                <dt>Định dạng (theo magic bytes)</dt><dd id="st-format">—</dd>
-                <dt>Kích thước ảnh</dt><dd id="st-dims">—</dd>
-                <dt>16 byte đầu (hex)</dt><dd id="st-head">—</dd>
+                <dt>File name</dt><dd id="st-name">—</dd>
+                <dt>Size</dt><dd id="st-size">—</dd>
+                <dt>Format (from magic bytes)</dt><dd id="st-format">—</dd>
+                <dt>Image dimensions</dt><dd id="st-dims">—</dd>
+                <dt>First 16 bytes (hex)</dt><dd id="st-head">—</dd>
               </dl>
             </div>
             <div class="card">
@@ -663,77 +670,77 @@
             </div>
           </div>
 
-          <div class="cols2" style="margin-top:16px;">
+          <div class="cols2">
             <div class="card">
-              <label class="flabel">Chuỗi in được trong dữ liệu thô (ASCII, dài ≥ 4) — <span id="st-strings-count">0</span> chuỗi</label>
+              <label class="flabel">Printable strings in raw data (ASCII, length ≥ 4) — <span id="st-strings-count">0</span> strings</label>
               <div class="strings-box" id="st-strings">—</div>
             </div>
             <div class="card">
-              <h3>Dữ liệu nối thêm sau cuối ảnh</h3>
-              <div class="status dim" id="st-appended-info" style="margin-top:0;">Chưa phân tích.</div>
+              <h3>Data Appended After Image End</h3>
+              <div class="status dim" id="st-appended-info" style="margin-top:0;">Not analyzed yet.</div>
               <div class="btnrow">
-                <button class="btn small" id="st-appended-download" type="button" disabled>Tải phần dữ liệu nối thêm</button>
+                <button class="btn small" id="st-appended-download" type="button" disabled>Download appended data</button>
               </div>
-              <img class="img-preview" id="st-appended-img" alt="Ảnh trong phần dữ liệu nối thêm" style="display:none;" />
+              <img class="img-preview" id="st-appended-img" alt="Image in appended data" style="display:none;" />
               <div class="img-meta" id="st-appended-img-meta"></div>
-              <label class="flabel" style="margin-top:12px;">Chuỗi in được trong phần nối thêm</label>
+              <label class="flabel" style="margin-top:12px;">Printable strings in appended data</label>
               <div class="strings-box" id="st-appended-strings" style="max-height:220px;">—</div>
             </div>
           </div>
 
-          <div class="card" style="margin-top:16px;">
-            <h3>Lớp bit (bit planes) — bit 0 và bit 1 của từng kênh</h3>
+          <div class="card">
+            <h3>Bit Planes — bit 0 and bit 1 of each channel</h3>
             <div class="planes" id="st-planes"></div>
             <div class="status dim" id="st-planes-status"></div>
           </div>
 
           <div class="card">
-            <h3>Trích xuất LSB</h3>
+            <h3>LSB Extraction</h3>
             <div class="card-cols">
               <div>
-                <label class="flabel" for="st-lsb-channels">Kênh màu (theo thứ tự đọc)</label>
+                <label class="flabel" for="st-lsb-channels">Color channels (in read order)</label>
                 <select id="st-lsb-channels">
                   <option value="rgb" selected>RGB</option>
                   <option value="rgba">RGBA</option>
                   <option value="bgr">BGR</option>
-                  <option value="r">Chỉ R</option>
-                  <option value="g">Chỉ G</option>
-                  <option value="b">Chỉ B</option>
-                  <option value="a">Chỉ Alpha</option>
+                  <option value="r">R only</option>
+                  <option value="g">G only</option>
+                  <option value="b">B only</option>
+                  <option value="a">Alpha only</option>
                 </select>
               </div>
               <div>
-                <label class="flabel" for="st-lsb-bit">Bit trích</label>
+                <label class="flabel" for="st-lsb-bit">Bit to extract</label>
                 <select id="st-lsb-bit">
                   <option value="0" selected>Bit 0 (LSB)</option>
                   <option value="1">Bit 1</option>
                 </select>
-                <label class="flabel" for="st-lsb-order" style="margin-top:12px;">Thứ tự ghép bit thành byte</label>
+                <label class="flabel" for="st-lsb-order" style="margin-top:12px;">Bit order when assembling bytes</label>
                 <select id="st-lsb-order">
-                  <option value="msb" selected>MSB trước (bit đầu tiên là bit cao nhất)</option>
-                  <option value="lsb">LSB trước (bit đầu tiên là bit thấp nhất)</option>
+                  <option value="msb" selected>MSB first (first bit is most significant)</option>
+                  <option value="lsb">LSB first (first bit is least significant)</option>
                 </select>
               </div>
             </div>
-            <div class="status dim" id="st-lsb-status">Chưa trích xuất.</div>
-            <label class="flabel" for="st-lsb-text" style="margin-top:12px;">Dữ liệu trích được, đọc dạng văn bản</label>
-            <textarea class="mono" id="st-lsb-text" rows="7" readonly spellcheck="false" placeholder="Dữ liệu LSB sẽ hiện ở đây…"></textarea>
-            <label class="flabel" style="margin-top:12px;">Chuỗi in được bên trong dòng LSB</label>
+            <div class="status dim" id="st-lsb-status">Not extracted yet.</div>
+            <label class="flabel" for="st-lsb-text" style="margin-top:12px;">Extracted data, as text</label>
+            <textarea class="mono" id="st-lsb-text" rows="7" readonly spellcheck="false" placeholder="LSB data appears here…"></textarea>
+            <label class="flabel" style="margin-top:12px;">Printable strings within the LSB stream</label>
             <div class="strings-box" id="st-lsb-strings" style="max-height:260px;">—</div>
           </div>
         </div>
       </section>
 
-      <!-- ================= CUPP / TẠO WORDLIST THEO HỒ SƠ ================= -->
+      <!-- ================= CUPP WORDLIST GENERATOR ================= -->
       <section class="panel" id="panel-cupp" role="tabpanel">
-        <h2>CUPP — Tạo wordlist theo hồ sơ</h2>
+        <h2>CUPP Wordlist Generator</h2>
 
         <div class="card">
-          <h3>Chế độ</h3>
-          <label class="flabel" for="cupp-mode">Kiểu sinh wordlist</label>
+          <h3>Mode</h3>
+          <label class="flabel" for="cupp-mode">Generation mode</label>
           <select id="cupp-mode">
-            <option value="profile" selected>Từ hồ sơ cá nhân — tương đương cupp.py -i</option>
-            <option value="improve">Nâng cấp wordlist có sẵn — tương đương cupp.py -w</option>
+            <option value="profile" selected>From personal profile — equivalent to cupp.py -i</option>
+            <option value="improve">Improve an existing wordlist — equivalent to cupp.py -w</option>
           </select>
         </div>
 
@@ -741,47 +748,47 @@
           <div class="cols2">
             <div class="col-stack">
               <div class="card">
-                <h3>Người chính (bắt buộc ít nhất tên)</h3>
-                <label class="flabel" for="cupp-name">Tên (First Name)</label>
-                <input type="text" id="cupp-name" class="mono" autocomplete="off" placeholder="ví dụ: john" />
-                <label class="flabel" for="cupp-surname" style="margin-top:12px;">Họ (Surname)</label>
-                <input type="text" id="cupp-surname" class="mono" autocomplete="off" placeholder="ví dụ: doe" />
-                <label class="flabel" for="cupp-nick" style="margin-top:12px;">Biệt danh (Nickname)</label>
-                <input type="text" id="cupp-nick" class="mono" autocomplete="off" placeholder="ví dụ: johny" />
-                <label class="flabel" for="cupp-birth" style="margin-top:12px;">Ngày sinh (DDMMYYYY)</label>
-                <input type="text" id="cupp-birth" class="mono" autocomplete="off" inputmode="numeric" placeholder="ví dụ: 15081990 — đúng 8 chữ số, để trống nếu không biết" />
+                <h3>Primary Person (first name required)</h3>
+                <label class="flabel" for="cupp-name">First name</label>
+                <input type="text" id="cupp-name" class="mono" autocomplete="off" placeholder="e.g. john" />
+                <label class="flabel" for="cupp-surname" style="margin-top:12px;">Surname</label>
+                <input type="text" id="cupp-surname" class="mono" autocomplete="off" placeholder="e.g. doe" />
+                <label class="flabel" for="cupp-nick" style="margin-top:12px;">Nickname</label>
+                <input type="text" id="cupp-nick" class="mono" autocomplete="off" placeholder="e.g. johny" />
+                <label class="flabel" for="cupp-birth" style="margin-top:12px;">Birthdate (DDMMYYYY)</label>
+                <input type="text" id="cupp-birth" class="mono" autocomplete="off" inputmode="numeric" placeholder="e.g. 15081990 — exactly 8 digits, leave blank if unknown" />
               </div>
 
               <div class="card">
-                <h3>Bạn đời (Partner)</h3>
-                <label class="flabel" for="cupp-wife">Tên bạn đời</label>
-                <input type="text" id="cupp-wife" class="mono" autocomplete="off" placeholder="ví dụ: jane" />
-                <label class="flabel" for="cupp-wifen" style="margin-top:12px;">Biệt danh bạn đời</label>
-                <input type="text" id="cupp-wifen" class="mono" autocomplete="off" placeholder="ví dụ: janie" />
-                <label class="flabel" for="cupp-wifeb" style="margin-top:12px;">Ngày sinh bạn đời (DDMMYYYY)</label>
-                <input type="text" id="cupp-wifeb" class="mono" autocomplete="off" inputmode="numeric" placeholder="8 chữ số, để trống nếu không biết" />
+                <h3>Partner</h3>
+                <label class="flabel" for="cupp-wife">Partner's first name</label>
+                <input type="text" id="cupp-wife" class="mono" autocomplete="off" placeholder="e.g. jane" />
+                <label class="flabel" for="cupp-wifen" style="margin-top:12px;">Partner's nickname</label>
+                <input type="text" id="cupp-wifen" class="mono" autocomplete="off" placeholder="e.g. janie" />
+                <label class="flabel" for="cupp-wifeb" style="margin-top:12px;">Partner's birthdate (DDMMYYYY)</label>
+                <input type="text" id="cupp-wifeb" class="mono" autocomplete="off" inputmode="numeric" placeholder="8 digits, leave blank if unknown" />
               </div>
             </div>
 
             <div class="col-stack">
               <div class="card">
-                <h3>Con (Child)</h3>
-                <label class="flabel" for="cupp-kid">Tên con</label>
-                <input type="text" id="cupp-kid" class="mono" autocomplete="off" placeholder="ví dụ: bob" />
-                <label class="flabel" for="cupp-kidn" style="margin-top:12px;">Biệt danh của con</label>
-                <input type="text" id="cupp-kidn" class="mono" autocomplete="off" placeholder="ví dụ: bobby" />
-                <label class="flabel" for="cupp-kidb" style="margin-top:12px;">Ngày sinh của con (DDMMYYYY)</label>
-                <input type="text" id="cupp-kidb" class="mono" autocomplete="off" inputmode="numeric" placeholder="8 chữ số, để trống nếu không biết" />
+                <h3>Child</h3>
+                <label class="flabel" for="cupp-kid">Child's first name</label>
+                <input type="text" id="cupp-kid" class="mono" autocomplete="off" placeholder="e.g. bob" />
+                <label class="flabel" for="cupp-kidn" style="margin-top:12px;">Child's nickname</label>
+                <input type="text" id="cupp-kidn" class="mono" autocomplete="off" placeholder="e.g. bobby" />
+                <label class="flabel" for="cupp-kidb" style="margin-top:12px;">Child's birthdate (DDMMYYYY)</label>
+                <input type="text" id="cupp-kidb" class="mono" autocomplete="off" inputmode="numeric" placeholder="8 digits, leave blank if unknown" />
               </div>
 
               <div class="card">
-                <h3>Khác</h3>
-                <label class="flabel" for="cupp-pet">Tên thú cưng (Pet)</label>
-                <input type="text" id="cupp-pet" class="mono" autocomplete="off" placeholder="ví dụ: rex" />
-                <label class="flabel" for="cupp-company" style="margin-top:12px;">Tên công ty (Company)</label>
-                <input type="text" id="cupp-company" class="mono" autocomplete="off" placeholder="ví dụ: acme" />
-                <label class="flabel" for="cupp-words" style="margin-top:12px;">Từ khoá riêng (cách nhau bằng dấu phẩy)</label>
-                <input type="text" id="cupp-words" class="mono" autocomplete="off" placeholder="ví dụ: hacker,juice,black" />
+                <h3>Other</h3>
+                <label class="flabel" for="cupp-pet">Pet name</label>
+                <input type="text" id="cupp-pet" class="mono" autocomplete="off" placeholder="e.g. rex" />
+                <label class="flabel" for="cupp-company" style="margin-top:12px;">Company name</label>
+                <input type="text" id="cupp-company" class="mono" autocomplete="off" placeholder="e.g. acme" />
+                <label class="flabel" for="cupp-words" style="margin-top:12px;">Custom keywords (comma-separated)</label>
+                <input type="text" id="cupp-words" class="mono" autocomplete="off" placeholder="e.g. hacker,juice,black" />
               </div>
             </div>
           </div>
@@ -789,31 +796,31 @@
 
         <div id="cupp-improve-box" style="display:none;">
           <div class="card">
-            <h3>Wordlist gốc cần nâng cấp</h3>
+            <h3>Source Wordlist to Improve</h3>
             <div class="btnrow" style="margin:0 0 10px;">
-              <button class="btn" id="cupp-imp-file-btn" type="button">Nạp file wordlist…</button>
+              <button class="btn" id="cupp-imp-file-btn" type="button">Load wordlist file…</button>
               <input class="hidden-input" type="file" id="cupp-imp-file" accept=".txt,.list,.dic,text/plain" />
             </div>
-            <label class="flabel" for="cupp-imp-text">Hoặc dán các từ gốc (mỗi dòng một từ)</label>
+            <label class="flabel" for="cupp-imp-text">Or paste source words (one per line)</label>
             <textarea class="mono" id="cupp-imp-text" rows="8" spellcheck="false" placeholder="football&#10;dragon&#10;sunshine"></textarea>
-            <div class="status dim" id="cupp-imp-status">Chưa có từ gốc nào.</div>
+            <div class="status dim" id="cupp-imp-status">No source words yet.</div>
             <label class="checkline">
               <input type="checkbox" id="cupp-imp-concat" />
-              Ghép mọi từ với mọi từ (N×N tổ hợp)
+              Concatenate every word with every word (N×N combinations)
             </label>
           </div>
         </div>
 
-        <div class="cols2" style="margin-top:16px;">
+        <div class="cols2">
           <div class="card">
-            <h3>Tuỳ chọn sinh</h3>
+            <h3>Generation Options</h3>
             <label class="checkline">
               <input type="checkbox" id="cupp-specs" />
-              Thêm ký tự đặc biệt vào cuối từ (mọi tổ hợp 1–3 ký tự)
+              Append special characters (all 1–3 character combinations)
             </label>
             <label class="checkline">
               <input type="checkbox" id="cupp-randnum" checked />
-              Thêm số vào cuối từ
+              Append numbers
             </label>
             <label class="checkline">
               <input type="checkbox" id="cupp-leet" />
@@ -821,89 +828,89 @@
             </label>
             <label class="checkline">
               <input type="checkbox" id="cupp-lenfilter" checked />
-              Lọc độ dài (wcfrom – wcto)
+              Length filter (wcfrom – wcto)
             </label>
           </div>
 
           <div class="card">
-            <h3>Cấu hình (mặc định = cupp.cfg)</h3>
-            <label class="flabel" for="cupp-years">Danh sách năm (cách nhau bằng dấu phẩy)</label>
+            <h3>Configuration (defaults = cupp.cfg)</h3>
+            <label class="flabel" for="cupp-years">Year list (comma-separated)</label>
             <textarea class="mono" id="cupp-years" rows="3" spellcheck="false">1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022</textarea>
-            <label class="flabel" for="cupp-chars" style="margin-top:12px;">Ký tự đặc biệt (cách nhau bằng dấu phẩy)</label>
+            <label class="flabel" for="cupp-chars" style="margin-top:12px;">Special characters (comma-separated)</label>
             <input type="text" id="cupp-chars" class="mono" autocomplete="off" value="!,@,'#',$,%,&amp;,*" />
             <div class="grid2" style="gap:12px; margin-top:12px;">
               <div>
-                <label class="flabel" for="cupp-numfrom">Số bắt đầu (from)</label>
+                <label class="flabel" for="cupp-numfrom">Number from</label>
                 <input type="text" id="cupp-numfrom" class="mono" autocomplete="off" inputmode="numeric" value="0" />
               </div>
               <div>
-                <label class="flabel" for="cupp-numto">Số kết thúc (to)</label>
+                <label class="flabel" for="cupp-numto">Number to</label>
                 <input type="text" id="cupp-numto" class="mono" autocomplete="off" inputmode="numeric" value="100" />
               </div>
               <div>
-                <label class="flabel" for="cupp-wcfrom">wcfrom — giữ từ dài hơn</label>
+                <label class="flabel" for="cupp-wcfrom">wcfrom — keep words longer than</label>
                 <input type="text" id="cupp-wcfrom" class="mono" autocomplete="off" inputmode="numeric" value="5" />
               </div>
               <div>
-                <label class="flabel" for="cupp-wcto">wcto — giữ từ ngắn hơn</label>
+                <label class="flabel" for="cupp-wcto">wcto — keep words shorter than</label>
                 <input type="text" id="cupp-wcto" class="mono" autocomplete="off" inputmode="numeric" value="12" />
               </div>
             </div>
           </div>
         </div>
 
-        <div class="card" style="margin-top:16px;">
-          <h3>Kết quả</h3>
+        <div class="card">
+          <h3>Result</h3>
           <div class="btnrow" style="margin-top:0;">
-            <button class="btn primary" id="cupp-gen" type="button">Tạo wordlist</button>
-            <button class="btn" id="cupp-download" type="button" disabled>Tải file .txt</button>
-            <button class="btn" id="cupp-copy" type="button" disabled>Sao chép</button>
-            <button class="btn" id="cupp-tocrack" type="button" disabled>Đưa sang tab Dò hash</button>
+            <button class="btn primary" id="cupp-gen" type="button">Generate Wordlist</button>
+            <button class="btn" id="cupp-download" type="button" disabled>Download .txt</button>
+            <button class="btn" id="cupp-copy" type="button" disabled>Copy</button>
+            <button class="btn" id="cupp-tocrack" type="button" disabled>Send to Hash Cracker</button>
           </div>
-          <div class="status dim" id="cupp-status">Chưa tạo wordlist.</div>
-          <label class="flabel" for="cupp-out" style="margin-top:12px;">Wordlist đã tạo — <span id="cupp-count">0</span> từ</label>
-          <textarea class="mono" id="cupp-out" rows="14" readonly spellcheck="false" placeholder="Wordlist sẽ hiện ở đây…"></textarea>
+          <div class="status dim" id="cupp-status">No wordlist generated yet.</div>
+          <label class="flabel" for="cupp-out" style="margin-top:12px;">Generated wordlist — <span id="cupp-count">0</span> words</label>
+          <textarea class="mono" id="cupp-out" rows="14" readonly spellcheck="false" placeholder="Wordlist appears here…"></textarea>
         </div>
       </section>
 
-      <!-- ================= PHÂN TÍCH INPUT / ĐOÁN LOẠI MÃ HOÁ ================= -->
+      <!-- ================= MAGIC IDENTIFIER ================= -->
       <section class="panel" id="panel-identify" role="tabpanel">
-        <h2>Phân tích input — đoán loại mã hoá / chuyển đổi</h2>
+        <h2>Magic Identifier</h2>
 
         <div class="cols2 start">
           <div class="col-stack id-side">
             <div class="card">
-              <label class="flabel" for="id-input">Input cần phân tích</label>
-          <textarea class="mono" id="id-input" rows="7" spellcheck="false" placeholder="Dán chuỗi cần nhận diện vào đây…"></textarea>
-          <div class="sample-row" aria-label="Dữ kiện mẫu để thử nhanh">
-            <span style="font-size:13px; color:var(--faint); align-self:center;">Thử nhanh:</span>
+              <label class="flabel" for="id-input">Input to analyze</label>
+          <textarea class="mono" id="id-input" rows="7" spellcheck="false" placeholder="Paste a string to identify…"></textarea>
+          <div class="sample-row" aria-label="Sample inputs">
+            <span class="sample-label">Try:</span>
             <button class="btn small" type="button" data-id-sample="b64">Base64</button>
             <button class="btn small" type="button" data-id-sample="hex">Hex</button>
             <button class="btn small" type="button" data-id-sample="jwt">JWT</button>
             <button class="btn small" type="button" data-id-sample="hash">Hash SHA-256</button>
-            <button class="btn small" type="button" data-id-sample="double">Base64 lồng Hex</button>
+            <button class="btn small" type="button" data-id-sample="double">Base64-wrapped Hex</button>
             <button class="btn small" type="button" data-id-sample="morse">Morse</button>
-            <button class="btn small" type="button" data-id-sample="binary">Nhị phân</button>
+            <button class="btn small" type="button" data-id-sample="binary">Binary</button>
             <button class="btn small" type="button" data-id-sample="rot13">ROT13</button>
             <button class="btn small" type="button" data-id-sample="url">URL-encode</button>
           </div>
-          <div class="status dim" id="id-status">Chưa có input.</div>
+          <div class="status dim" id="id-status">No input yet.</div>
         </div>
 
             <div class="card" id="id-stats-card" style="display:none;">
-              <h3>Đặc điểm của input</h3>
+              <h3>Input Characteristics</h3>
               <div class="claims" id="id-stats"></div>
             </div>
           </div>
 
           <div>
             <div class="card" id="id-empty">
-              <h3>Kết quả phân tích</h3>
-              <div class="status dim" style="margin:0;">Chưa có kết quả.</div>
+              <h3>Analysis Results</h3>
+              <div class="status dim" style="margin:0;">No results yet.</div>
             </div>
 
             <div id="id-results-wrap" style="display:none;">
-          <h2 style="font-size:17px; margin:0 0 12px;">Khả năng nhận diện — <span id="id-count">0</span></h2>
+          <h2 class="results-title">Detection candidates — <span id="id-count">0</span></h2>
               <div class="detect-list" id="id-results"></div>
             </div>
           </div>
@@ -915,7 +922,7 @@
     <script>
     "use strict";
     /* ============================================================
-       Tiện ích byte / base64url / hex
+       Byte / base64url / hex utilities
        ============================================================ */
     var te = new TextEncoder();
     var td = new TextDecoder("utf-8", { fatal: false });
@@ -946,7 +953,7 @@
     }
     function hexToBytes(str) {
       var s = String(str).replace(/0x/gi, "").replace(/[^0-9a-fA-F]/g, "");
-      if (s.length % 2) throw new Error("Dãy hex có độ dài lẻ.");
+      if (s.length % 2) throw new Error("Hex string has odd length.");
       var out = new Uint8Array(s.length / 2);
       for (var i = 0; i < out.length; i++) out[i] = parseInt(s.substr(i * 2, 2), 16);
       return out;
@@ -970,7 +977,7 @@
       function done() {
         if (!btn) return;
         var old = btn.textContent;
-        btn.textContent = "Đã chép ✓";
+        btn.textContent = "Copied ✓";
         setTimeout(function () { btn.textContent = old; }, 1400);
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -984,7 +991,7 @@
     }
 
     /* ============================================================
-       SHA-256 thuần JS + HMAC-SHA256 (chấp nhận khóa mọi độ dài)
+       Pure-JS SHA-256 + HMAC-SHA256 (accepts keys of any length)
        ============================================================ */
     var SHA256_K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
     function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
@@ -1071,12 +1078,12 @@
     var elVerifyBadge = document.getElementById("jwt-verify-badge");
     var elClaimsCard = document.getElementById("jwt-claims-card");
     var elClaims = document.getElementById("jwt-claims");
-    var origSig = "";       // chữ ký của token gốc dán vào
-    var syncing = false;    // chống vòng lặp đồng bộ hai chiều
+    var origSig = "";       // signature of the pasted original token
+    var syncing = false;    // prevents two-way sync loops
 
     function fmtTime(sec) {
       var d = new Date(sec * 1000);
-      return d.toLocaleString("vi-VN", { hour12: false }) ;
+      return d.toLocaleString("en-US", { hour12: false }) ;
     }
     function splitToken(tok) {
       var parts = String(tok).trim().split(".");
@@ -1091,13 +1098,13 @@
     }
     function renderClaims(payload) {
       var rows = [];
-      [["exp", "Hết hạn (exp)"], ["iat", "Phát hành lúc (iat)"], ["nbf", "Có hiệu lực từ (nbf)"]].forEach(function (pair) {
+      [["exp", "Expires (exp)"], ["iat", "Issued at (iat)"], ["nbf", "Not before (nbf)"]].forEach(function (pair) {
         var k = pair[0];
         if (typeof payload[k] === "number") {
           var sub = "", cls = "";
           if (k === "exp") {
-            if (payload[k] * 1000 < Date.now()) { sub = "Đã hết hạn"; cls = "expired"; }
-            else { sub = "Chưa hết hạn"; cls = "valid"; }
+            if (payload[k] * 1000 < Date.now()) { sub = "Expired"; cls = "expired"; }
+            else { sub = "Still valid"; cls = "valid"; }
           }
           rows.push('<div class="claim"><div class="k">' + pair[1] + '</div><div class="v">' +
             payload[k] + '</div><div class="sub ' + cls + '">' + fmtTime(payload[k]) +
@@ -1115,14 +1122,14 @@
       if (syncing) return;
       var tok = elToken.value.trim();
       if (!tok) {
-        elJwtStatus.textContent = "Chưa có token.";
+        elJwtStatus.textContent = "No token yet.";
         elJwtStatus.className = "status dim";
         elSig.value = ""; elClaimsCard.style.display = "none";
         return;
       }
       var parts = splitToken(tok);
       if (!parts) {
-        elJwtStatus.textContent = "Token phải có đúng 3 đoạn cách nhau bằng dấu chấm.";
+        elJwtStatus.textContent = "Token must have exactly 3 dot-separated segments.";
         elJwtStatus.className = "status err";
         return;
       }
@@ -1133,23 +1140,23 @@
         elHeader.value = JSON.stringify(header, null, 2);
         elPayload.value = JSON.stringify(payload, null, 2);
         syncing = false;
-        elSig.value = parts[2] || "(rỗng — alg=none)";
+        elSig.value = parts[2] || "(empty — alg=none)";
         if (origSig === "" && parts[2]) origSig = parts[2];
-        elJwtStatus.textContent = "Đã giải mã: alg = " + (header.alg || "?") +
-          (parts[2] ? "" : " · chữ ký rỗng");
+        elJwtStatus.textContent = "Decoded: alg = " + (header.alg || "?") +
+          (parts[2] ? "" : " · empty signature");
         elJwtStatus.className = "status ok";
         renderClaims(payload);
       } catch (e) {
-        elJwtStatus.textContent = "Không giải mã được: " + e.message;
+        elJwtStatus.textContent = "Could not decode: " + e.message;
         elJwtStatus.className = "status err";
       }
     }
     function rebuildTokenFromJson(keepSigSegment) {
       var header, payload;
       try { header = JSON.parse(elHeader.value); }
-      catch (e) { elJwtAction.textContent = "Header chưa phải JSON hợp lệ: " + e.message; elJwtAction.className = "status err"; return null; }
+      catch (e) { elJwtAction.textContent = "Header is not valid JSON: " + e.message; elJwtAction.className = "status err"; return null; }
       try { payload = JSON.parse(elPayload.value); }
-      catch (e) { elJwtAction.textContent = "Payload chưa phải JSON hợp lệ: " + e.message; elJwtAction.className = "status err"; return null; }
+      catch (e) { elJwtAction.textContent = "Payload is not valid JSON: " + e.message; elJwtAction.className = "status err"; return null; }
       var sig = keepSigSegment;
       if (sig === undefined) {
         var parts = splitToken(elToken.value.trim());
@@ -1158,7 +1165,7 @@
       var tok = encodeSeg(header) + "." + encodeSeg(payload) + "." + sig;
       syncing = true;
       elToken.value = tok;
-      elSig.value = sig || "(rỗng — alg=none)";
+      elSig.value = sig || "(empty — alg=none)";
       syncing = false;
       renderClaims(payload);
       return { header: header, payload: payload, token: tok };
@@ -1167,7 +1174,7 @@
       if (syncing) return;
       var r = rebuildTokenFromJson(undefined);
       if (r) {
-        elJwtAction.textContent = "Đã cập nhật token.";
+        elJwtAction.textContent = "Token updated.";
         elJwtAction.className = "status dim";
         hideBadge();
       }
@@ -1199,7 +1206,7 @@
       elToken.value = signingInput + "." + sigSeg;
       elSig.value = sigSeg;
       syncing = false;
-      elJwtAction.textContent = "Đã ký HS256 · khóa " + getSecretBytes().length + " byte";
+      elJwtAction.textContent = "Signed (HS256) · " + getSecretBytes().length + "-byte key";
       elJwtAction.className = "status ok";
       hideBadge();
     });
@@ -1207,37 +1214,37 @@
     document.getElementById("jwt-verify").addEventListener("click", function () {
       var parts = splitToken(elToken.value.trim());
       if (!parts) {
-        elJwtAction.textContent = "Chưa có token hợp lệ để kiểm chứng.";
+        elJwtAction.textContent = "No valid token to verify.";
         elJwtAction.className = "status err"; return;
       }
       var expect;
       try { expect = b64ToBytes(parts[2], true); }
-      catch (e) { elJwtAction.textContent = "Đoạn chữ ký không phải Base64URL hợp lệ."; elJwtAction.className = "status err"; return; }
+      catch (e) { elJwtAction.textContent = "Signature segment is not valid Base64URL."; elJwtAction.className = "status err"; return; }
       var calc = hmacSha256(getSecretBytes(), te.encode(parts[0] + "." + parts[1]));
       var ok = bytesEqual(calc, expect);
       elVerifyBadge.style.display = "";
       elVerifyBadge.className = "badge " + (ok ? "ok" : "bad");
-      elVerifyBadge.textContent = ok ? "✓ Chữ ký HỢP LỆ với khóa này" : "✗ Chữ ký KHÔNG khớp với khóa này";
+      elVerifyBadge.textContent = ok ? "✓ Signature VALID for this key" : "✗ Signature does NOT match this key";
       elJwtAction.textContent = "";
     });
 
     document.getElementById("jwt-keepsig").addEventListener("click", function () {
       if (!origSig) {
-        elJwtAction.textContent = "Chưa có chữ ký gốc.";
+        elJwtAction.textContent = "No original signature stored.";
         elJwtAction.className = "status err"; return;
       }
       var r = rebuildTokenFromJson(origSig);
       if (r) {
-        elJwtAction.textContent = "Đã ghép chữ ký gốc.";
+        elJwtAction.textContent = "Original signature restored.";
         elJwtAction.className = "status ok"; hideBadge();
       }
     });
 
 
         /* ============================================================
-       Thuật toán băm thuần JS cho bộ dò tổng quát
-       (MD5 / MD4 / SHA-1 / SHA-512 — đã đối chiếu vector kiểm thử
-        chuẩn và OpenSSL; SHA-256 dùng lại sha256Bytes ở trên)
+       Pure-JS hash algorithms for the general cracker
+       (MD5 / MD4 / SHA-1 / SHA-512 — verified against standard test vectors
+        and OpenSSL; SHA-256 reuses sha256Bytes above)
        ============================================================ */
 function padMD(msg, littleEndianLen){
   var l=msg.length; var total=Math.ceil((l+9)/64)*64; var buf=new Uint8Array(total);
@@ -1371,7 +1378,7 @@ function sha512Bytes(msg){
     var ALGO_HEXLEN = { md5: 32, ntlm: 32, sha1: 40, sha256: 64, sha512: 128 };
 
     /* ============================================================
-       Dò hash tổng quát (JWT HS256 + hash thô) & Tạo lệnh hashcat
+       Hash Cracker (JWT HS256 + raw hashes) & Hashcat Command Builder
        ============================================================ */
     var elCrackMode = document.getElementById("crack-mode");
     var elCrackJwtBox = document.getElementById("crack-jwt-box");
@@ -1404,7 +1411,7 @@ function sha512Bytes(msg){
       if (h.length === 40) return "sha1";
       if (h.length === 64) return "sha256";
       if (h.length === 128) return "sha512";
-      return null; // 32: MD5/NTLM mơ hồ -> bắt chọn tay; độ dài khác: không hỗ trợ
+      return null; // 32: MD5/NTLM ambiguous -> manual choice required; other lengths unsupported
     }
     function updateHashStatus() {
       var h = crackCleanHash();
@@ -1413,7 +1420,7 @@ function sha512Bytes(msg){
         elCrackHashStatus.className = "status dim"; return;
       }
       if (!/^[0-9a-f]+$/.test(h)) {
-        elCrackHashStatus.textContent = "Không phải hex.";
+        elCrackHashStatus.textContent = "Not valid hex.";
         elCrackHashStatus.className = "status err"; return;
       }
       var a = detectAlgo();
@@ -1421,10 +1428,10 @@ function sha512Bytes(msg){
         elCrackHashStatus.textContent = h.length + " hex → " + ALGO_LABEL[a];
         elCrackHashStatus.className = "status ok";
       } else if (h.length === 32) {
-        elCrackHashStatus.textContent = "32 hex: MD5 hoặc NTLM — chọn tay.";
+        elCrackHashStatus.textContent = "32 hex chars: MD5 or NTLM — pick one manually.";
         elCrackHashStatus.className = "status err";
       } else {
-        elCrackHashStatus.textContent = "Dài " + h.length + " hex — cần 32/40/64/128.";
+        elCrackHashStatus.textContent = "Length " + h.length + " hex chars — expected 32/40/64/128.";
         elCrackHashStatus.className = "status err";
       }
     }
@@ -1444,7 +1451,7 @@ function sha512Bytes(msg){
     }
     function updateWlStatus() {
       var n = wordlistKeys().length;
-      elCrackWlStatus.textContent = n ? ("Danh sách có " + n.toLocaleString("vi-VN") + " ứng viên.") : "Chưa có ứng viên nào trong danh sách.";
+      elCrackWlStatus.textContent = n ? ("List contains " + n.toLocaleString("en-US") + " candidates.") : "No candidates yet.";
       elCrackWlStatus.className = "status " + (n ? "ok" : "dim");
     }
     elCrackWl.addEventListener("input", updateWlStatus);
@@ -1465,8 +1472,8 @@ function sha512Bytes(msg){
 
     document.getElementById("crack-from-jwt").addEventListener("click", function () {
       var tj = elToken.value.trim();
-      if (tj) { elCrackToken.value = tj; elCrackTokStatus.textContent = "Đã lấy token từ JWT Workbench."; elCrackTokStatus.className = "status ok"; }
-      else { elCrackTokStatus.textContent = "Bên JWT Workbench chưa có token."; elCrackTokStatus.className = "status err"; }
+      if (tj) { elCrackToken.value = tj; elCrackTokStatus.textContent = "Token imported from JWT Workbench."; elCrackTokStatus.className = "status ok"; }
+      else { elCrackTokStatus.textContent = "JWT Workbench has no token yet."; elCrackTokStatus.className = "status err"; }
     });
 
     document.getElementById("crack-found-copy").addEventListener("click", function () {
@@ -1475,7 +1482,7 @@ function sha512Bytes(msg){
     elFoundUse.addEventListener("click", function () {
       document.getElementById("jwt-secret").value = elFoundKey.textContent;
       document.querySelector('[data-tab="jwt"]').click();
-      elJwtAction.textContent = "Đã điền khóa vào JWT Workbench.";
+      elJwtAction.textContent = "Key sent to JWT Workbench.";
       elJwtAction.className = "status ok";
     });
 
@@ -1489,33 +1496,33 @@ function sha512Bytes(msg){
       if (mode === "jwt") {
         var parts = splitToken(elCrackToken.value.trim());
         if (!parts) {
-          elCrackTokStatus.textContent = "Token phải có đúng 3 đoạn.";
+          elCrackTokStatus.textContent = "Token must have exactly 3 segments.";
           elCrackTokStatus.className = "status err"; return;
         }
         var header;
         try { header = decodeSeg(parts[0]); } catch (e) {
-          elCrackTokStatus.textContent = "Không giải mã được header: " + e.message;
+          elCrackTokStatus.textContent = "Could not decode header: " + e.message;
           elCrackTokStatus.className = "status err"; return;
         }
         if (String(header.alg || "").toUpperCase() !== "HS256") {
-          elCrackTokStatus.textContent = "alg = " + (header.alg || "?") + " — chỉ HS256.";
+          elCrackTokStatus.textContent = "alg = " + (header.alg || "?") + " — HS256 only.";
           elCrackTokStatus.className = "status err"; return;
         }
         var targetSig;
         try { targetSig = b64ToBytes(parts[2], true); } catch (e) {
-          elCrackTokStatus.textContent = "Đoạn chữ ký không hợp lệ.";
+          elCrackTokStatus.textContent = "Invalid signature segment.";
           elCrackTokStatus.className = "status err"; return;
         }
         elCrackTokStatus.textContent = "";
         var signingInput = te.encode(parts[0] + "." + parts[1]);
         testFn = function (cand) { return bytesEqual(hmacSha256(te.encode(cand), signingInput), targetSig); };
-        foundLabel = "Tìm thấy khóa bí mật của token:";
+        foundLabel = "Secret key found:";
         chunkSize = 250;
       } else {
         var target = crackCleanHash();
         var algo = detectAlgo();
         if (!target || !/^[0-9a-f]+$/.test(target)) {
-          elCrackHashStatus.textContent = "Hãy dán một hash hex hợp lệ trước.";
+          elCrackHashStatus.textContent = "Paste a valid hex hash first.";
           elCrackHashStatus.className = "status err"; return;
         }
         if (!algo) { updateHashStatus(); return; }
@@ -1524,12 +1531,12 @@ function sha512Bytes(msg){
           elCrackHashStatus.className = "status err"; return;
         }
         testFn = function (cand) { return rawHashHex(algo, cand) === target; };
-        foundLabel = "Tìm thấy mật khẩu ứng với hash " + ALGO_LABEL[algo] + ":";
+        foundLabel = "Password found for " + ALGO_LABEL[algo] + " hash:";
         chunkSize = algo === "sha512" ? 60 : (algo === "sha256" ? 250 : 500);
       }
 
       if (!keys.length) {
-        elCrackWlStatus.textContent = "Chưa có wordlist.";
+        elCrackWlStatus.textContent = "No wordlist loaded.";
         elCrackWlStatus.className = "status err"; return;
       }
       elFound.classList.remove("show");
@@ -1538,7 +1545,7 @@ function sha512Bytes(msg){
       var idx = 0;
       var started = performance.now();
       function finishStopped() {
-        elProgressText.textContent = "Đã dừng ở " + idx.toLocaleString("vi-VN") + " / " + keys.length.toLocaleString("vi-VN") + " ứng viên.";
+        elProgressText.textContent = "Stopped at " + idx.toLocaleString("en-US") + " / " + keys.length.toLocaleString("en-US") + " candidates.";
         elProgressText.className = "status dim";
         btnStart.disabled = false; btnStop.disabled = true;
       }
@@ -1550,7 +1557,7 @@ function sha512Bytes(msg){
             cracking = false;
             elProgress.value = 100;
             var secs = ((performance.now() - started) / 1000).toFixed(1);
-            elProgressText.textContent = "Trúng sau " + (idx + 1).toLocaleString("vi-VN") + " lần thử (" + secs + " giây).";
+            elProgressText.textContent = "Matched after " + (idx + 1).toLocaleString("en-US") + " attempts (" + secs + " s).";
             elProgressText.className = "status ok";
             elFoundLabel.textContent = foundLabel;
             elFoundKey.textContent = keys[idx];
@@ -1562,23 +1569,23 @@ function sha512Bytes(msg){
         var elapsed = (performance.now() - started) / 1000;
         var rate = elapsed > 0 ? Math.round(idx / elapsed) : 0;
         elProgress.value = keys.length ? (idx / keys.length) * 100 : 0;
-        elProgressText.textContent = "Đã thử " + idx.toLocaleString("vi-VN") + " / " + keys.length.toLocaleString("vi-VN") +
-          " ứng viên · " + rate.toLocaleString("vi-VN") + " ứng viên/giây · đang thử: " + (keys[idx - 1] || "");
+        elProgressText.textContent = "Tried " + idx.toLocaleString("en-US") + " / " + keys.length.toLocaleString("en-US") +
+          " candidates · " + rate.toLocaleString("en-US") + " candidates/s · current: " + (keys[idx - 1] || "");
         if (idx < keys.length) setTimeout(step, 0);
         else {
           cracking = false;
-          elProgressText.textContent = "Hết " + keys.length.toLocaleString("vi-VN") + " ứng viên — không khớp.";
+          elProgressText.textContent = "Exhausted " + keys.length.toLocaleString("en-US") + " candidates — no match.";
           elProgressText.className = "status err";
           btnStart.disabled = false; btnStop.disabled = true;
         }
       }
       elProgress.value = 0;
-      elProgressText.textContent = "Đang dò…";
+      elProgressText.textContent = "Cracking…";
       elProgressText.className = "status dim";
       setTimeout(step, 30);
     });
 
-    /* ---------- Tạo lệnh hashcat ---------- */
+    /* ---------- Hashcat Command Builder ---------- */
     var hcType = document.getElementById("hc-type");
     var hcHashfile = document.getElementById("hc-hashfile");
     var hcWordlist = document.getElementById("hc-wordlist");
@@ -1637,7 +1644,7 @@ function sha512Bytes(msg){
       var units = ["KB", "MB", "GB"];
       var v = n, i = -1;
       do { v /= 1024; i++; } while (v >= 1024 && i < units.length - 1);
-      return v.toFixed(2) + " " + units[i] + " (" + n.toLocaleString("vi-VN") + " byte)";
+      return v.toFixed(2) + " " + units[i] + " (" + n.toLocaleString("en-US") + " byte)";
     }
     function extractStrings(bytes, minLen) {
       var out = [];
@@ -1660,11 +1667,11 @@ function sha512Bytes(msg){
         document.getElementById("triage-result").style.display = "";
         document.getElementById("tr-name").textContent = file.name;
         document.getElementById("tr-size").textContent = humanSize(file.size);
-        document.getElementById("tr-type").textContent = file.type || "(trình duyệt không xác định)";
+        document.getElementById("tr-type").textContent = file.type || "(browser did not provide a type)";
         var head = bytes.subarray(0, 16);
         var hexParts = [];
         for (var i = 0; i < head.length; i++) hexParts.push(("0" + head[i].toString(16)).slice(-2).toUpperCase());
-        document.getElementById("tr-head").textContent = hexParts.join(" ") || "(file rỗng)";
+        document.getElementById("tr-head").textContent = hexParts.join(" ") || "(empty file)";
         var trImgInfo = renderableImageInfo(bytes) || (file.type && file.type.indexOf("image/") === 0 ? { mime: file.type, ext: (file.name.split(".").pop() || "").toLowerCase() } : null);
         var trCard = document.getElementById("tr-img-card");
         var trImg = document.getElementById("tr-img");
@@ -1680,7 +1687,7 @@ function sha512Bytes(msg){
           trImg.removeAttribute("src");
           trCard.style.display = "none";
         }
-        document.getElementById("tr-sha").textContent = "đang tính…";
+        document.getElementById("tr-sha").textContent = "computing…";
         if (window.crypto && crypto.subtle) {
           crypto.subtle.digest("SHA-256", bytes).then(function (hash) {
             triageSha = bytesToHex(new Uint8Array(hash));
@@ -1694,19 +1701,19 @@ function sha512Bytes(msg){
           document.getElementById("tr-sha").textContent = triageSha;
         }
         var strings = extractStrings(bytes, 4);
-        document.getElementById("tr-strings-count").textContent = strings.length.toLocaleString("vi-VN");
+        document.getElementById("tr-strings-count").textContent = strings.length.toLocaleString("en-US");
         var MAXSHOW = 5000;
         var shown = strings.slice(0, MAXSHOW);
         document.getElementById("tr-strings").textContent =
-          shown.join("\n") + (strings.length > MAXSHOW ? "\n… (chỉ hiện " + MAXSHOW.toLocaleString("vi-VN") + " chuỗi đầu)" : "") || "(không có chuỗi nào)";
+          shown.join("\n") + (strings.length > MAXSHOW ? "\n… (showing first " + MAXSHOW.toLocaleString("en-US") + " strings)" : "") || "(no strings found)";
       };
       reader.readAsArrayBuffer(file);
     }
 
         /* ============================================================
-       Chuyển đổi realtime: Base64 / Hex / HMAC
-       Gõ ở ô nào, ô còn lại cập nhật theo ngay. Dữ kiện đang gõ dở
-       chưa hợp lệ chỉ hiện ghi chú nhẹ (dim), không báo lỗi đỏ.
+       Realtime converters: Base64 / Hex / HMAC
+       Typing in either field updates the other immediately. Partially typed,
+       not-yet-valid input shows a dim note only, never a red error.
        ============================================================ */
     document.querySelectorAll("[data-copy]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -1730,7 +1737,7 @@ function sha512Bytes(msg){
         b64In.value = td.decode(b64ToBytes(raw, b64Mode.value === "url"));
         b64Status.textContent = ""; b64Status.className = "status dim";
       } catch (e) {
-        b64Status.textContent = "Chưa phải " + (b64Mode.value === "url" ? "Base64URL" : "Base64") + " hoàn chỉnh.";
+        b64Status.textContent = "Not yet valid " + (b64Mode.value === "url" ? "Base64URL" : "Base64") + ".";
         b64Status.className = "status dim";
       }
       b64Sync = false;
@@ -1752,14 +1759,14 @@ function sha512Bytes(msg){
       var raw = hexOut.value.replace(/0x/gi, "").replace(/[^0-9a-fA-F]/g, "");
       if (!raw) { hexIn.value = ""; hexStatus.textContent = ""; hexSync = false; return; }
       if (raw.length % 2) {
-        hexStatus.textContent = "Hex lẻ ký tự.";
+        hexStatus.textContent = "Odd number of hex digits.";
         hexStatus.className = "status dim"; hexSync = false; return;
       }
       try {
         hexIn.value = td.decode(hexToBytes(raw));
         hexStatus.textContent = ""; hexStatus.className = "status dim";
       } catch (e) {
-        hexStatus.textContent = "Hex chưa hợp lệ.";
+        hexStatus.textContent = "Not yet valid hex.";
         hexStatus.className = "status dim";
       }
       hexSync = false;
@@ -1778,9 +1785,9 @@ function sha512Bytes(msg){
     hmacRealtime();
 
     /* ============================================================
-       Giải mã RSA — nạp private key PEM (PKCS#1 / PKCS#8) bằng
-       parser DER tự viết, giải mã bằng BigInt: m = c^d mod n,
-       rồi gỡ đệm PKCS#1 v1.5 / OAEP / raw. Tất cả trong trình duyệt.
+       RSA Decryption — loads PEM private keys (PKCS#1 / PKCS#8) with a
+       hand-written DER parser, decrypts with BigInt: m = c^d mod n,
+       then strips PKCS#1 v1.5 / OAEP / raw padding. All in the browser.
        ============================================================ */
     function escapeHtml(s) {
       return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -1806,18 +1813,18 @@ function sha512Bytes(msg){
       return result;
     }
     function derReadTlv(b, p) {
-      if (p + 2 > b.length) throw new Error("Dữ liệu DER bị cắt ngắn.");
+      if (p + 2 > b.length) throw new Error("DER data is truncated.");
       var tag = b[p];
       var lp = p + 1;
       var lb = b[lp++];
       var len;
       if (lb & 0x80) {
         var n = lb & 0x7f;
-        if (n === 0 || n > 4 || lp + n > b.length) throw new Error("DER: trường độ dài không hỗ trợ.");
+        if (n === 0 || n > 4 || lp + n > b.length) throw new Error("DER: unsupported length field.");
         len = 0;
         for (var i = 0; i < n; i++) len = len * 256 + b[lp++];
       } else len = lb;
-      if (lp + len > b.length) throw new Error("Dữ liệu DER bị cắt ngắn.");
+      if (lp + len > b.length) throw new Error("DER data is truncated.");
       return { tag: tag, start: lp, len: len, end: lp + len };
     }
     function derChildren(content) {
@@ -1828,7 +1835,7 @@ function sha512Bytes(msg){
     function parsePkcs1(content) {
       var els = derChildren(content);
       if (els.length < 4 || els[1].tag !== 0x02 || els[3].tag !== 0x02)
-        throw new Error("Khoá PKCS#1 thiếu thành phần (cần ít nhất version, n, e, d).");
+        throw new Error("PKCS#1 key is missing components (needs at least version, n, e, d).");
       function iv(i) { return bytesToBigInt(content.subarray(els[i].start, els[i].end)); }
       var nb = content.subarray(els[1].start, els[1].end);
       var k = nb.length - (nb.length > 1 && nb[0] === 0 ? 1 : 0);
@@ -1836,25 +1843,25 @@ function sha512Bytes(msg){
     }
     function parseRsaPrivateKey(text) {
       var t = String(text || "").trim();
-      if (!t) throw new Error("Chưa có khoá.");
-      if (/ENCRYPTED/.test(t)) throw new Error("Khoá này đã đặt mật khẩu (ENCRYPTED PRIVATE KEY) — trang chưa hỗ trợ; hãy gỡ mật khẩu khoá bằng openssl rsa trước rồi dán lại.");
+      if (!t) throw new Error("No key loaded.");
+      if (/ENCRYPTED/.test(t)) throw new Error("This key is passphrase-protected (ENCRYPTED PRIVATE KEY) — not supported here; strip the passphrase with openssl rsa first, then paste again.");
       var m = t.match(/-----BEGIN [^-]+-----([\s\S]*?)-----END [^-]+-----/);
       var der = b64ToBytes(m ? m[1] : t, false);
       var outer = derReadTlv(der, 0);
-      if (outer.tag !== 0x30) throw new Error("DER không bắt đầu bằng SEQUENCE — đây không giống private key RSA.");
+      if (outer.tag !== 0x30) throw new Error("DER does not start with a SEQUENCE — this does not look like an RSA private key.");
       var content = der.subarray(outer.start, outer.end);
       var els = derChildren(content);
       if (els.length >= 3 && els[1].tag === 0x30) {
         // PKCS#8: SEQUENCE { version, algorithmIdentifier, OCTET STRING chứa PKCS#1 }
         var oct = els[2];
-        if (oct.tag !== 0x04) throw new Error("PKCS#8: không thấy OCTET STRING chứa khoá RSA.");
+        if (oct.tag !== 0x04) throw new Error("PKCS#8: no OCTET STRING containing the RSA key.");
         var inner = content.subarray(oct.start, oct.end);
         var innerSeq = derReadTlv(inner, 0);
-        if (innerSeq.tag !== 0x30) throw new Error("PKCS#8: khoá bên trong không phải SEQUENCE.");
+        if (innerSeq.tag !== 0x30) throw new Error("PKCS#8: inner key is not a SEQUENCE.");
         return parsePkcs1(inner.subarray(innerSeq.start, innerSeq.end));
       }
       if (els.length >= 4 && els[1].tag === 0x02) return parsePkcs1(content);
-      throw new Error("Không nhận diện được định dạng khoá — cần PKCS#1 (BEGIN RSA PRIVATE KEY) hoặc PKCS#8 (BEGIN PRIVATE KEY).");
+      throw new Error("Unrecognized key format — expected PKCS#1 (BEGIN RSA PRIVATE KEY) or PKCS#8 (BEGIN PRIVATE KEY).");
     }
     function rsaHash(name, bytes) {
       if (name === "sha1") return sha1Bytes(bytes);
@@ -1885,37 +1892,37 @@ function sha512Bytes(msg){
     function oaepDecode(em, hashName) {
       var hLen = rsaHash(hashName, new Uint8Array(0)).length;
       if (em.length < 2 * hLen + 2 || em[0] !== 0)
-        throw new Error("OAEP: block giải ra không hợp lệ (sai độ dài hoặc byte đầu khác 0) — thường là do sai padding, sai hash OAEP, hoặc sai khoá.");
+        throw new Error("OAEP: decoded block is invalid (wrong length or leading byte not 0) — usually wrong padding, wrong OAEP hash, or wrong key.");
       var maskedSeed = em.subarray(1, 1 + hLen);
       var maskedDB = em.subarray(1 + hLen);
       var seed = xorBytes(maskedSeed, mgf1(maskedDB, hLen, hashName));
       var db = xorBytes(maskedDB, mgf1(seed, em.length - hLen - 1, hashName));
       var lHash = rsaHash(hashName, new Uint8Array(0));
       for (var i = 0; i < hLen; i++)
-        if (db[i] !== lHash[i]) throw new Error("OAEP: lHash không khớp — thử đổi hàm băm OAEP (SHA-1 / SHA-256 / SHA-512), hoặc đây không phải padding OAEP.");
+        if (db[i] !== lHash[i]) throw new Error("OAEP: lHash mismatch — try a different OAEP hash (SHA-1 / SHA-256 / SHA-512), or this is not OAEP padding.");
       var idx = hLen;
       while (idx < db.length && db[idx] === 0) idx++;
-      if (idx >= db.length || db[idx] !== 1) throw new Error("OAEP: không tìm thấy byte phân cách 0x01 trong block.");
+      if (idx >= db.length || db[idx] !== 1) throw new Error("OAEP: separator byte 0x01 not found in block.");
       return db.subarray(idx + 1);
     }
     function pkcs1v15Decode(em) {
       if (em.length < 11 || em[0] !== 0 || em[1] !== 2)
-        throw new Error("PKCS#1 v1.5: block giải ra không bắt đầu bằng 00 02 — đây có thể không phải padding v1.5 (thử OAEP hoặc Không đệm), hoặc khoá không khớp với bản mã.");
+        throw new Error("PKCS#1 v1.5: decoded block does not start with 00 02 — this may not be v1.5 padding (try OAEP or No padding), or the key does not match the ciphertext.");
       var idx = 2;
       while (idx < em.length && em[idx] !== 0) idx++;
-      if (idx >= em.length) throw new Error("PKCS#1 v1.5: không tìm thấy byte 00 phân cách trong block.");
-      if (idx < 10) throw new Error("PKCS#1 v1.5: phần đệm PS ngắn hơn 8 byte — block không hợp lệ.");
+      if (idx >= em.length) throw new Error("PKCS#1 v1.5: separator byte 00 not found in block.");
+      if (idx < 10) throw new Error("PKCS#1 v1.5: padding string PS shorter than 8 bytes — invalid block.");
       return em.subarray(idx + 1);
     }
     function rsaDecryptAll(key, ct, padding, oaepHash) {
       var k = key.k;
-      if (!ct.length) throw new Error("Chưa có dữ liệu bản mã.");
+      if (!ct.length) throw new Error("No ciphertext data.");
       if (ct.length % k !== 0)
-        throw new Error("Bản mã dài " + ct.length + " byte, không phải bội số của block RSA " + k + " byte (khoá " + key.bits + "-bit). Hãy kiểm tra: file .enc có đúng là byte RSA thô không, hay đang ở dạng hex/Base64 chưa được giải mã, hay khoá không phải nửa còn lại của cặp khoá đã mã hoá?");
+        throw new Error("Ciphertext is " + ct.length + " bytes — not a multiple of the RSA block size " + k + " bytes (key: " + key.bits + "-bit). Check: is the .enc file really raw RSA bytes, or is it still hex/Base64-encoded, or is this key not the other half of the encrypting key pair?");
       var parts = [], total = 0;
       for (var off = 0; off < ct.length; off += k) {
         var c = bytesToBigInt(ct.subarray(off, off + k));
-        if (c >= key.n) throw new Error("Một block bản mã lớn hơn modulus n — khoá chắc chắn không khớp với bản mã này.");
+        if (c >= key.n) throw new Error("A ciphertext block is larger than modulus n — this key definitely does not match this ciphertext.");
         var em = bigIntToBytes(modPow(c, key.d, key.n), k);
         var pt = padding === "oaep" ? oaepDecode(em, oaepHash) : (padding === "raw" ? em : pkcs1v15Decode(em));
         parts.push(pt); total += pt.length;
@@ -1937,7 +1944,7 @@ function sha512Bytes(msg){
       rsaKeyObj = null;
       var t = elRsaKey.value.trim();
       if (!t) {
-        elRsaKeyStatus.textContent = "Chưa có khoá.";
+        elRsaKeyStatus.textContent = "No key loaded.";
         elRsaKeyStatus.className = "status dim"; return;
       }
       try {
@@ -1945,7 +1952,7 @@ function sha512Bytes(msg){
         elRsaKeyStatus.textContent = "RSA " + rsaKeyObj.bits + "-bit · e = " + rsaKeyObj.e.toString() + " · block " + rsaKeyObj.k + " byte";
         elRsaKeyStatus.className = "status ok";
       } catch (e) {
-        elRsaKeyStatus.textContent = "Chưa đọc được khoá: " + e.message;
+        elRsaKeyStatus.textContent = "Could not parse key: " + e.message;
         elRsaKeyStatus.className = "status err";
       }
     }
@@ -1985,7 +1992,7 @@ function sha512Bytes(msg){
       var reader = new FileReader();
       reader.onload = function () {
         rsaFileBytes = new Uint8Array(reader.result);
-        elRsaFileStatus.textContent = "Đã nạp file “" + file.name + "” — " + rsaFileBytes.length.toLocaleString("vi-VN") + " byte.";
+        elRsaFileStatus.textContent = "Loaded file '" + file.name + "' — " + rsaFileBytes.length.toLocaleString("en-US") + " bytes.";
         elRsaFileStatus.className = "status ok";
       };
       reader.readAsArrayBuffer(file);
@@ -1994,7 +2001,7 @@ function sha512Bytes(msg){
       var fmt = document.getElementById("rsa-ct-format").value;
       var pasted = document.getElementById("rsa-ct-text").value.trim();
       if (pasted) {
-        if (fmt === "raw") throw new Error("Định dạng “Byte thô” chỉ dùng được với file — hãy chọn Hex, Base64 hoặc Tự nhận diện cho ô dán.");
+        if (fmt === "raw") throw new Error("The 'Raw bytes' format only works with a file — choose Hex, Base64, or Auto-detect for pasted input.");
         if (fmt === "hex") return hexToBytes(pasted);
         if (fmt === "base64") return b64ToBytes(pasted, false);
         var compact = pasted.replace(/\s+/g, "");
@@ -2006,14 +2013,14 @@ function sha512Bytes(msg){
         if (fmt === "base64") return b64ToBytes(td.decode(rsaFileBytes), false);
         return rsaFileBytes;
       }
-      throw new Error("Chưa có bản mã — hãy nạp file .enc hoặc dán bản mã dạng hex/Base64.");
+      throw new Error("No ciphertext — load an .enc file or paste hex/Base64 ciphertext.");
     }
     document.getElementById("rsa-decrypt").addEventListener("click", function () {
       elRsaStatus.textContent = ""; elRsaStatus.className = "status";
       document.getElementById("rsa-download").disabled = true;
       rsaPlain = null;
       if (!rsaKeyObj) {
-        elRsaStatus.textContent = "Chưa nạp được private key hợp lệ — xem dòng trạng thái dưới ô khoá.";
+        elRsaStatus.textContent = "No valid private key loaded — see the status line under the key field.";
         elRsaStatus.className = "status err"; return;
       }
       var ct;
@@ -2021,7 +2028,7 @@ function sha512Bytes(msg){
       catch (e) { elRsaStatus.textContent = e.message; elRsaStatus.className = "status err"; return; }
       var btn = this;
       btn.disabled = true;
-      elRsaStatus.textContent = "Đang giải mã " + (ct.length / rsaKeyObj.k) + " block…";
+      elRsaStatus.textContent = "Decrypting " + (ct.length / rsaKeyObj.k) + " block…";
       elRsaStatus.className = "status dim";
       setTimeout(function () {
         try {
@@ -2040,7 +2047,7 @@ function sha512Bytes(msg){
             fillImgMeta(rsaImg, document.getElementById("rsa-pt-img-meta"));
             rsaImgWrap.style.display = "";
           } else { rsaImg.removeAttribute("src"); rsaImgWrap.style.display = "none"; }
-          elRsaStatus.textContent = "Xong · " + rsaPlain.length.toLocaleString("vi-VN") + " byte";
+          elRsaStatus.textContent = "Done · " + rsaPlain.length.toLocaleString("en-US") + " byte";
           elRsaStatus.className = "status ok";
         } catch (e) {
           elRsaStatus.textContent = e.message;
@@ -2065,9 +2072,9 @@ function sha512Bytes(msg){
       setTimeout(function () { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 400);
     });
     /* ============================================================
-       Giải mã ảnh (steganography) — strings, metadata (EXIF JPEG,
-       chunk chữ PNG), bit planes, trích LSB, dữ liệu nối thêm
-       sau điểm kết thúc hợp lệ. Tất cả trong trình duyệt.
+       Image Steganography — strings, metadata (JPEG EXIF,
+       PNG text chunks), bit planes, LSB extraction, appended data
+       after the valid end marker. All in the browser.
        ============================================================ */
     function bytesToLatin1(bytes) {
       var s = "", CH = 0x8000;
@@ -2091,11 +2098,11 @@ function sha512Bytes(msg){
       if (b.length >= 6 && bytesToLatin1(b.subarray(0, 6)).indexOf("GIF8") === 0) return "GIF";
       if (b.length >= 2 && b[0] === 0x42 && b[1] === 0x4d) return "BMP";
       if (b.length >= 12 && bytesToLatin1(b.subarray(0, 4)) === "RIFF" && bytesToLatin1(b.subarray(8, 12)) === "WEBP") return "WebP";
-      return "Không rõ";
+      return "Unknown";
     }
     function inflateZlib(bytes) {
       if (typeof DecompressionStream === "undefined")
-        return Promise.reject(new Error("Trình duyệt không có DecompressionStream."));
+        return Promise.reject(new Error("Browser has no DecompressionStream."));
       var ds = new DecompressionStream("deflate");
       var stream = new Blob([bytes]).stream().pipeThrough(ds);
       return new Response(stream).arrayBuffer().then(function (buf) { return new Uint8Array(buf); });
@@ -2121,14 +2128,14 @@ function sha512Bytes(msg){
     function pngTextValue(entry) {
       var d = entry.data;
       var z = indexOfZero(d, 0);
-      if (z < 0) return Promise.resolve(["(không có keyword)", bytesToLatin1(d)]);
+      if (z < 0) return Promise.resolve(["(no keyword)", bytesToLatin1(d)]);
       var keyword = bytesToLatin1(d.subarray(0, z));
       if (entry.type === "tEXt")
         return Promise.resolve([keyword, bytesToLatin1(d.subarray(z + 1))]);
       if (entry.type === "zTXt") {
         return inflateZlib(d.subarray(z + 2)).then(function (dec) {
           return [keyword, td.decode(dec)];
-        }).catch(function () { return [keyword, "(giải nén zTXt thất bại)"]; });
+        }).catch(function () { return [keyword, "(zTXt decompression failed)"]; });
       }
       // iTXt: keyword \0 compressionFlag(1) compressionMethod(1) language \0 translated \0 text
       var flag = d[z + 1];
@@ -2140,7 +2147,7 @@ function sha512Bytes(msg){
       var raw = d.subarray(p);
       if (flag === 1) {
         return inflateZlib(raw).then(function (dec) { return [keyword, td.decode(dec)]; })
-          .catch(function () { return [keyword, "(giải nén iTXt thất bại)"]; });
+          .catch(function () { return [keyword, "(iTXt decompression failed)"]; });
       }
       return Promise.resolve([keyword, td.decode(raw)]);
     }
@@ -2178,12 +2185,12 @@ function sha512Bytes(msg){
         var type = u16(e + 2), count = u32(e + 4);
         var size = (sizes[type] || 1) * count;
         var voff = size <= 4 ? e + 8 : start + u32(e + 8);
-        if (voff < 0 || voff + Math.min(size, 8) > b.length) return "(giá trị nằm ngoài file)";
+        if (voff < 0 || voff + Math.min(size, 8) > b.length) return "(value outside file)";
         var i, vals = [];
         if (type === 2) return bytesToLatin1(b.subarray(voff, Math.min(voff + count, b.length))).replace(/\0+$/, "");
         if (type === 1 || type === 7) {
           if (count <= 8) return headHexSpaced(b.subarray(voff, voff + count), 8);
-          return count + " byte, mở đầu: " + headHexSpaced(b.subarray(voff, voff + 8), 8);
+          return count + " bytes, starts with: " + headHexSpaced(b.subarray(voff, voff + 8), 8);
         }
         if (type === 3) { for (i = 0; i < Math.min(count, 6); i++) vals.push(String(u16(voff + i * 2))); }
         else if (type === 4) { for (i = 0; i < Math.min(count, 6); i++) vals.push(String(u32(voff + i * 4))); }
@@ -2194,8 +2201,8 @@ function sha512Bytes(msg){
             var den = type === 5 ? u32(voff + i * 8 + 4) : s32(voff + i * 8 + 4);
             vals.push(den ? (num / den).toFixed(4).replace(/\.?0+$/, "") + " (" + num + "/" + den + ")" : num + "/0");
           }
-        } else return "(type " + type + ", " + count + " phần tử)";
-        return vals.join(", ") + (count > vals.length ? " … (" + count + " giá trị)" : "");
+        } else return "(type " + type + ", " + count + " elements)";
+        return vals.join(", ") + (count > vals.length ? " … (" + count + " values)" : "");
       }
       var visited = {};
       function parseIfd(relOff, label) {
@@ -2209,7 +2216,7 @@ function sha512Bytes(msg){
           var tag = u16(e);
           var name = TIFF_TAGS[tag] || ("Tag 0x" + tag.toString(16).toUpperCase());
           if (tag === 34665 || tag === 34853 || tag === 40965) {
-            rows.push([label + " · " + name, "(có IFD con — đã đọc gộp bên dưới)"]);
+            rows.push([label + " · " + name, "(sub-IFD present — merged below)"]);
             parseIfd(u32(e + 8), name);
             continue;
           }
@@ -2225,15 +2232,15 @@ function sha512Bytes(msg){
       var res = { segments: [], exifRows: [], comments: [], end: -1 };
       var names = {
         0xE0: "APP0 (JFIF)", 0xE1: "APP1", 0xE2: "APP2", 0xE3: "APP3", 0xEB: "APP11",
-        0xED: "APP13", 0xEE: "APP14", 0xFE: "COM (comment)", 0xDB: "DQT (bảng lượng tử hoá)",
-        0xC0: "SOF0", 0xC2: "SOF2", 0xC4: "DHT (bảng Huffman)", 0xDD: "DRI", 0xDA: "SOS"
+        0xED: "APP13", 0xEE: "APP14", 0xFE: "COM (comment)", 0xDB: "DQT (quantization table)",
+        0xC0: "SOF0", 0xC2: "SOF2", 0xC4: "DHT (Huffman table)", 0xDD: "DRI", 0xDA: "SOS"
       };
       var p = 2;
       while (p + 4 <= b.length) {
         if (b[p] !== 0xff) break;
         var marker = b[p + 1];
         if (marker === 0xDA) {
-          res.segments.push(["SOS", "tại offset " + p + " — dữ liệu ảnh nén bắt đầu sau segment này"]);
+          res.segments.push(["SOS", "at offset " + p + " — compressed image data starts after this segment"]);
           var slen = (b[p + 2] << 8) | b[p + 3];
           var i = p + 2 + slen;
           while (i + 1 < b.length) {
@@ -2256,17 +2263,17 @@ function sha512Bytes(msg){
         var info = "";
         if (marker === 0xE1) {
           if (data.length >= 6 && bytesToLatin1(data.subarray(0, 6)) === "Exif\0\0") {
-            info = "chứa EXIF";
+            info = "contains EXIF";
             res.exifRows = parseTiff(b, p + 4 + 6);
           } else if (data.length > 29 && bytesToLatin1(data.subarray(0, 29)) === "http://ns.adobe.com/xap/1.0/\0") {
-            info = "chứa XMP";
+            info = "contains XMP";
             res.comments.push(["XMP (APP1)", td.decode(data.subarray(29)).slice(0, 2000)]);
-          } else info = "mở đầu: " + bytesToLatin1(data.subarray(0, Math.min(24, data.length)));
+          } else info = "starts with: " + bytesToLatin1(data.subarray(0, Math.min(24, data.length)));
         }
         if (marker === 0xFE) {
           var c = td.decode(data);
           res.comments.push(["COM", c]);
-          info = "nội dung: " + c.slice(0, 80);
+          info = "content: " + c.slice(0, 80);
         }
         if (marker === 0xE0) info = bytesToLatin1(data.subarray(0, 5)).replace(/\0$/, "");
         res.segments.push([nm, "offset " + p + " · " + len + " byte" + (info ? " · " + info : "")]);
@@ -2342,7 +2349,7 @@ function sha512Bytes(msg){
           URL.revokeObjectURL(url);
           resolve(c);
         };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Trình duyệt không giải mã được ảnh này.")); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Browser could not decode this image.")); };
         img.src = url;
       });
     }
@@ -2357,7 +2364,7 @@ function sha512Bytes(msg){
       rows.slice(0, MAXR).forEach(function (r) {
         html += "<dt>" + escapeHtml(r[0]) + "</dt><dd>" + escapeHtml(r[1]) + "</dd>";
       });
-      if (rows.length > MAXR) html += "<dt>…</dt><dd>(chỉ hiện " + MAXR + " mục đầu trong " + rows.length + " mục)</dd>";
+      if (rows.length > MAXR) html += "<dt>…</dt><dd>(showing first " + MAXR + " of " + rows.length + " entries)</dd>";
       dl.innerHTML = html;
     }
     function scanFlagInStego() {
@@ -2394,16 +2401,16 @@ function sha512Bytes(msg){
         var fmt = detectImageFormat(stBytes);
         document.getElementById("st-name").textContent = file.name;
         document.getElementById("st-size").textContent = humanSize(file.size);
-        document.getElementById("st-format").textContent = fmt + (file.type ? " (MIME máy báo: " + file.type + ")" : "");
-        document.getElementById("st-head").textContent = headHexSpaced(stBytes, 16) || "(file rỗng)";
-        document.getElementById("st-dims").textContent = "đang đọc…";
+        document.getElementById("st-format").textContent = fmt + (file.type ? " (browser MIME: " + file.type + ")" : "");
+        document.getElementById("st-head").textContent = headHexSpaced(stBytes, 16) || "(empty file)";
+        document.getElementById("st-dims").textContent = "reading…";
 
         // Strings trên dữ liệu thô
         var strings = extractStrings(stBytes, 4);
-        document.getElementById("st-strings-count").textContent = strings.length.toLocaleString("vi-VN");
+        document.getElementById("st-strings-count").textContent = strings.length.toLocaleString("en-US");
         var MAXS = 5000;
         document.getElementById("st-strings").textContent =
-          strings.slice(0, MAXS).join("\n") + (strings.length > MAXS ? "\n… (chỉ hiện " + MAXS.toLocaleString("vi-VN") + " chuỗi đầu)" : "") || "(không có chuỗi nào)";
+          strings.slice(0, MAXS).join("\n") + (strings.length > MAXS ? "\n… (showing first " + MAXS.toLocaleString("en-US") + " strings)" : "") || "(no strings found)";
 
         // Metadata + điểm kết thúc hợp lệ, theo từng định dạng
         var metaRows = [], end = -1, endLabel = "";
@@ -2419,7 +2426,7 @@ function sha512Bytes(msg){
           });
           Object.keys(counts).forEach(function (t) {
             var c = counts[t];
-            metaRows.push(["Chunk " + t, (c.n > 1 ? c.n + " chunk · " : "") + "tổng " + c.total.toLocaleString("vi-VN") + " byte" + (c.broken ? " · chunk cuối bị cắt ngắn" : "")]);
+            metaRows.push(["Chunk " + t, (c.n > 1 ? c.n + " chunks · " : "") + "total " + c.total.toLocaleString("en-US") + " byte" + (c.broken ? " · last chunk truncated" : "")]);
           });
           if (stBytes.length >= 24) {
             var pw = ((stBytes[16] << 24) | (stBytes[17] << 16) | (stBytes[18] << 8) | stBytes[19]) >>> 0;
@@ -2431,37 +2438,37 @@ function sha512Bytes(msg){
               metaRows.push(["PNG " + entry.type + " · " + kv[0], kv[1]]);
             });
           }));
-          if (!png.texts.length) metaRows.push(["Chunk chữ (tEXt/zTXt/iTXt)", "Không có chunk chữ nào."]);
+          if (!png.texts.length) metaRows.push(["Text chunks (tEXt/zTXt/iTXt)", "No text chunks."]);
         } else if (fmt === "JPEG") {
           var jpg = parseJpeg(stBytes);
           end = jpg.end; endLabel = "EOI (FF D9)";
           jpg.segments.forEach(function (s) { metaRows.push(["Segment " + s[0], s[1]]); });
           jpg.comments.forEach(function (c) { metaRows.push([c[0], c[1]]); });
           if (jpg.exifRows.length) jpg.exifRows.forEach(function (r) { metaRows.push(r); });
-          else metaRows.push(["EXIF", "Không có EXIF trong ảnh này."]);
+          else metaRows.push(["EXIF", "No EXIF in this image."]);
           metaDone = Promise.resolve();
         } else if (fmt === "GIF") {
-          end = gifEnd(stBytes); endLabel = "trailer 0x3B của GIF";
-          metaRows.push(["Phiên bản", bytesToLatin1(stBytes.subarray(0, 6))]);
+          end = gifEnd(stBytes); endLabel = "GIF trailer 0x3B";
+          metaRows.push(["Version", bytesToLatin1(stBytes.subarray(0, 6))]);
           if (stBytes.length >= 10)
-            metaRows.push(["Kích thước (header)", (stBytes[6] | (stBytes[7] << 8)) + " × " + (stBytes[8] | (stBytes[9] << 8)) + " px"]);
+            metaRows.push(["Dimensions (header)", (stBytes[6] | (stBytes[7] << 8)) + " × " + (stBytes[8] | (stBytes[9] << 8)) + " px"]);
           metaDone = Promise.resolve();
         } else if (fmt === "BMP") {
           if (stBytes.length >= 6) {
             var declared = (stBytes[2] | (stBytes[3] << 8) | (stBytes[4] << 16) | (stBytes[5] << 24)) >>> 0;
-            if (declared > 0 && declared <= stBytes.length) { end = declared; endLabel = "dung lượng khai trong header BMP"; }
-            metaRows.push(["Dung lượng khai trong header", declared.toLocaleString("vi-VN") + " byte"]);
+            if (declared > 0 && declared <= stBytes.length) { end = declared; endLabel = "size declared in BMP header"; }
+            metaRows.push(["Size declared in header", declared.toLocaleString("en-US") + " byte"]);
           }
           metaDone = Promise.resolve();
         } else if (fmt === "WebP") {
           if (stBytes.length >= 8) {
             var riffSize = (stBytes[4] | (stBytes[5] << 8) | (stBytes[6] << 16) | (stBytes[7] << 24)) >>> 0;
-            if (riffSize + 8 <= stBytes.length) { end = riffSize + 8; endLabel = "cuối khối RIFF của WebP"; }
-            metaRows.push(["Dung lượng RIFF khai báo", (riffSize + 8).toLocaleString("vi-VN") + " byte (gồm 8 byte header)"]);
+            if (riffSize + 8 <= stBytes.length) { end = riffSize + 8; endLabel = "end of WebP RIFF chunk"; }
+            metaRows.push(["Declared RIFF size", (riffSize + 8).toLocaleString("en-US") + " bytes (incl. 8-byte header)"]);
           }
           metaDone = Promise.resolve();
         } else {
-          metaRows.push(["Metadata", "Định dạng không rõ."]);
+          metaRows.push(["Metadata", "Unknown format."]);
           metaDone = Promise.resolve();
         }
 
@@ -2476,7 +2483,7 @@ function sha512Bytes(msg){
           var apStrings = document.getElementById("st-appended-strings");
           if (end > 0 && stBytes.length > end) {
             stAppended = stBytes.subarray(end);
-            info.textContent = "+" + stAppended.length.toLocaleString("vi-VN") + " byte sau " + endLabel + " · offset " + end.toLocaleString("vi-VN") + " · hex: " + headHexSpaced(stAppended, 16);
+            info.textContent = "+" + stAppended.length.toLocaleString("en-US") + " bytes after " + endLabel + " · offset " + end.toLocaleString("en-US") + " · hex: " + headHexSpaced(stAppended, 16);
             info.className = "status ok";
             dlBtn.disabled = false;
             var apImgInfo = renderableImageInfo(stAppended);
@@ -2490,14 +2497,14 @@ function sha512Bytes(msg){
               fillImgMeta(apImg, document.getElementById("st-appended-img-meta"));
             }
             var as = extractStrings(stAppended, 4);
-            apStrings.textContent = as.slice(0, 500).join("\n") || "(phần nối thêm không có chuỗi in được nào)";
+            apStrings.textContent = as.slice(0, 500).join("\n") || "(no printable strings in appended data)";
           } else if (end > 0) {
-            info.textContent = endLabel + " @ " + end.toLocaleString("vi-VN") + " · nối thêm: 0 byte";
+            info.textContent = endLabel + " @ " + end.toLocaleString("en-US") + " · appended: 0 bytes";
             info.className = "status dim";
             dlBtn.disabled = true;
             apStrings.textContent = "—";
           } else {
-            info.textContent = "Không rõ điểm kết thúc.";
+            info.textContent = "End marker not found.";
             info.className = "status err";
             dlBtn.disabled = true;
             apStrings.textContent = "—";
@@ -2508,7 +2515,7 @@ function sha512Bytes(msg){
         // Giải mã điểm ảnh: bit planes + LSB
         document.getElementById("st-planes").innerHTML = "";
         document.getElementById("st-planes-status").textContent = "";
-        document.getElementById("st-lsb-status").textContent = "Đang chờ giải mã điểm ảnh…";
+        document.getElementById("st-lsb-status").textContent = "Waiting for pixel decoding…";
         document.getElementById("st-lsb-status").className = "status dim";
         decodeToCanvas(stBytes, file.type).then(function (canvas) {
           stCanvas = canvas;
@@ -2517,10 +2524,10 @@ function sha512Bytes(msg){
           runLsb();
           scanFlagInStego();
         }).catch(function (e) {
-          document.getElementById("st-dims").textContent = "(không giải mã được điểm ảnh)";
+          document.getElementById("st-dims").textContent = "(could not decode pixels)";
           document.getElementById("st-planes-status").textContent = e.message;
           document.getElementById("st-planes-status").className = "status err";
-          document.getElementById("st-lsb-status").textContent = "Không trích được LSB.";
+          document.getElementById("st-lsb-status").textContent = "Could not extract LSB.";
           document.getElementById("st-lsb-status").className = "status err";
         });
       };
@@ -2562,7 +2569,7 @@ function sha512Bytes(msg){
         }
       }
       var st = document.getElementById("st-planes-status");
-      st.textContent = scale < 1 ? (sw + " × " + sh + " px (thu nhỏ)") : "";
+      st.textContent = scale < 1 ? (sw + " × " + sh + " px (scaled down)") : "";
       st.className = "status dim";
     }
 
@@ -2602,21 +2609,21 @@ function sha512Bytes(msg){
       }
       var ratio = sample.length ? printable / sample.length : 0;
       var chanNames = chans.map(function (c) { return "RGBA"[c]; }).join("");
-      status.textContent = out.length.toLocaleString("vi-VN") + " byte · kênh " + chanNames + " · bit " + bit +
-        (nul > 0 ? " · 0x00 @ " + nul.toLocaleString("vi-VN") : "") +
-        (ratio > 0.9 ? " · giống văn bản" : " · không giống văn bản");
+      status.textContent = out.length.toLocaleString("en-US") + " bytes · channels " + chanNames + " · bit " + bit +
+        (nul > 0 ? " · 0x00 @ " + nul.toLocaleString("en-US") : "") +
+        (ratio > 0.9 ? " · looks like text" : " · does not look like text");
       status.className = "status " + (ratio > 0.9 ? "ok" : "dim");
       var lsbStrings = extractStrings(out, 4);
-      stringsEl.textContent = lsbStrings.slice(0, 500).join("\n") + (lsbStrings.length > 500 ? "\n… (chỉ hiện 500 chuỗi đầu)" : "") || "(không có chuỗi in được nào trong dòng LSB)";
+      stringsEl.textContent = lsbStrings.slice(0, 500).join("\n") + (lsbStrings.length > 500 ? "\n… (showing first 500 strings)" : "") || "(no printable strings in LSB stream)";
       scanFlagInStego();
     }
 
     /* ============================================================
-       CUPP — port của cupp.py (Mebus/cupp) chạy trong trình duyệt.
+       CUPP — a browser port of cupp.py (Mebus/cupp).
        generate_wordlist_from_profile() và improve_dictionary()
-       được dịch lại theo đúng thuật toán gốc: mảnh ngày sinh,
-       ghép đôi tên, ghép với năm / số / ký tự đặc biệt (có và
-       không có "_"), tên đảo ngược, leet, lọc độ dài wcfrom/wcto.
+       re-implemented following the original algorithm: birthdate fragments,
+       name pairs, combinations with years / numbers / special characters (with and
+       without "_"), reversed names, leet, wcfrom/wcto length filter.
        ============================================================ */
     var CUPP_LEET = { a: "4", i: "1", e: "3", t: "7", o: "0", s: "5", g: "9", z: "2" };
     function cuppLeet(x) {
@@ -2716,7 +2723,7 @@ function sha512Bytes(msg){
     function cuppImpStatusUpdate() {
       var n = cuppImpWords().length;
       var st = document.getElementById("cupp-imp-status");
-      st.textContent = n ? ("Đang có " + n.toLocaleString("vi-VN") + " từ gốc.") : "Chưa có từ gốc nào.";
+      st.textContent = n ? ("Currently " + n.toLocaleString("en-US") + " source words.") : "No source words yet.";
       st.className = "status " + (n ? "ok" : "dim");
     }
     document.getElementById("cupp-imp-text").addEventListener("input", cuppImpStatusUpdate);
@@ -2763,16 +2770,16 @@ function sha512Bytes(msg){
       cuppResult = kept;
       var MAXSHOW = 100000;
       elCuppOut.value = kept.slice(0, MAXSHOW).join("\n");
-      document.getElementById("cupp-count").textContent = kept.length.toLocaleString("vi-VN");
+      document.getElementById("cupp-count").textContent = kept.length.toLocaleString("en-US");
       var has = kept.length > 0;
       document.getElementById("cupp-download").disabled = !has;
       document.getElementById("cupp-copy").disabled = !has;
       document.getElementById("cupp-tocrack").disabled = !has;
-      var msg = kept.length.toLocaleString("vi-VN") + " từ" + sourceNote +
-        " · trước khử trùng: " + before.toLocaleString("vi-VN") +
+      var msg = kept.length.toLocaleString("en-US") + " words" + sourceNote +
+        " · before dedup: " + before.toLocaleString("en-US") +
         (cfg.leetOn ? " · +leet" : "") +
-        (cfg.lenOn ? " · lọc " + (cfg.wcfrom + 1) + "–" + (cfg.wcto - 1) + " ký tự: −" + (all.length - kept.length).toLocaleString("vi-VN") : "");
-      if (!has) msg += " · rỗng — nới lọc độ dài.";
+        (cfg.lenOn ? " · length filter " + (cfg.wcfrom + 1) + "–" + (cfg.wcto - 1) + " chars: −" + (all.length - kept.length).toLocaleString("en-US") : "");
+      if (!has) msg += " · empty — loosen the length filter.";
       elCuppStatus.textContent = msg;
       elCuppStatus.className = "status " + (has ? "ok" : "err");
     }
@@ -2783,16 +2790,16 @@ function sha512Bytes(msg){
 
     function cuppGenerateProfile(cfg) {
       var name = cuppField("cupp-name");
-      if (!name) { cuppError("Thiếu Tên."); return; }
+      if (!name) { cuppError("First name is required."); return; }
       var surname = cuppField("cupp-surname"), nick = cuppField("cupp-nick");
       var wife = cuppField("cupp-wife"), wifen = cuppField("cupp-wifen");
       var kid = cuppField("cupp-kid"), kidn = cuppField("cupp-kidn");
       var pet = cuppField("cupp-pet"), company = cuppField("cupp-company");
       var birth = cuppBirth("cupp-birth"), wifeb = cuppBirth("cupp-wifeb"), kidb = cuppBirth("cupp-kidb");
-      var pairs = [[birth, "Ngày sinh người chính"], [wifeb, "Ngày sinh bạn đời"], [kidb, "Ngày sinh của con"]];
+      var pairs = [[birth, "Primary birthdate"], [wifeb, "Partner birthdate"], [kidb, "Child birthdate"]];
       for (var pi = 0; pi < pairs.length; pi++) {
         if (pairs[pi][0] && pairs[pi][0].length !== 8) {
-          cuppError(pairs[pi][1] + ": cần 8 chữ số DDMMYYYY (đang " + pairs[pi][0].length + ").");
+          cuppError(pairs[pi][1] + ": needs 8 digits DDMMYYYY (currently " + pairs[pi][0].length + ").");
           return;
         }
       }
@@ -2868,17 +2875,17 @@ function sha512Bytes(msg){
       // Danh sách nền của bản gốc: mảnh ngày sinh + đảo ngược + các nhóm tên + từ khoá
       all = all.concat(bdss, wbdss, kbdss, reverse, kombinaa, kombinaac, kombinaaw, kombinaak, word);
       cuppFileName = name + ".txt";
-      cuppFinish(all, cfg, " cho hồ sơ “" + name + "”");
+      cuppFinish(all, cfg, " for profile '" + name + "'");
     }
 
     function cuppGenerateImprove(cfg) {
       var words = cuppImpWords();
-      if (!words.length) { cuppError("Chưa có từ gốc."); return; }
+      if (!words.length) { cuppError("No source words."); return; }
       var concatOn = document.getElementById("cupp-imp-concat").checked;
       var contPairs = [];
       if (concatOn) {
         if (words.length * (words.length - 1) > 2000000) {
-          cuppError("Ghép đôi " + words.length.toLocaleString("vi-VN") + " từ: >2 triệu tổ hợp — rút gọn hoặc bỏ ghép đôi.");
+          cuppError("Pairwise concatenation of " + words.length.toLocaleString("en-US") + " words: >2M combinations — trim the list or disable concatenation.");
           return;
         }
         for (var i = 0; i < words.length; i++)
@@ -2902,21 +2909,21 @@ function sha512Bytes(msg){
         if (concatOn) all = all.concat(cuppConcats(contAll, cfg.numfrom, cfg.numto));
       }
       cuppFileName = "wordlist.cupp.txt";
-      cuppFinish(all, cfg, " từ " + words.length.toLocaleString("vi-VN") + " từ gốc");
+      cuppFinish(all, cfg, " from " + words.length.toLocaleString("en-US") + " source words");
     }
 
     document.getElementById("cupp-gen").addEventListener("click", function () {
       var cfg = cuppConfig();
       var btn = this;
       btn.disabled = true;
-      elCuppStatus.textContent = "Đang tạo wordlist…";
+      elCuppStatus.textContent = "Generating wordlist…";
       elCuppStatus.className = "status dim";
       setTimeout(function () {
         try {
           if (elCuppMode.value === "improve") cuppGenerateImprove(cfg);
           else cuppGenerateProfile(cfg);
         } catch (e) {
-          cuppError("Có lỗi khi tạo: " + e.message);
+          cuppError("Generation failed: " + e.message);
         }
         btn.disabled = false;
       }, 30);
@@ -2938,15 +2945,15 @@ function sha512Bytes(msg){
       elCrackWl.value = cuppResult.join("\n");
       updateWlStatus();
       document.querySelector('[data-tab="crack"]').click();
-      elCrackWlStatus.textContent = "Đã nạp " + cuppResult.length.toLocaleString("vi-VN") + " ứng viên từ CUPP.";
+      elCrackWlStatus.textContent = "Loaded " + cuppResult.length.toLocaleString("en-US") + " candidates from CUPP.";
       elCrackWlStatus.className = "status ok";
     });
 
     /* ============================================================
-       Phân tích input — đoán loại mã hoá / chuyển đổi.
-       Heuristic theo cấu trúc (bảng ký tự, độ dài, tiền tố, magic
-       bytes) + giải mã thử thật: giải ra dữ liệu đọc được thì
-       điểm tin cậy tăng mạnh. Hỗ trợ bóc từng lớp mã hoá lồng nhau.
+       Magic Identifier.
+       Structural heuristics (character set, length, prefixes, magic
+       bytes) + real trial decoding: output that reads as data
+       raises confidence sharply. Supports peeling nested encoding layers.
        ============================================================ */
     var elIdInput = document.getElementById("id-input");
     var elIdStatus = document.getElementById("id-status");
@@ -3001,7 +3008,7 @@ function sha512Bytes(msg){
       var text = td.decode(bytes);
       var clean = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "·");
       var lim = maxChars || 300;
-      return clean.length > lim ? clean.slice(0, lim) + " …(còn " + (clean.length - lim) + " ký tự)" : clean;
+      return clean.length > lim ? clean.slice(0, lim) + " …(" + (clean.length - lim) + " more chars)" : clean;
     }
     /* ============================================================
        Port của CyberChef Magic (GCHQ, Apache-2.0):
@@ -3072,7 +3079,7 @@ function sha512Bytes(msg){
       var bits = 0, val = 0, out = [];
       for (var i = 0; i < clean.length; i++) {
         var idx = alpha.indexOf(clean[i]);
-        if (idx < 0) throw new Error("ký tự ngoài bảng Base32");
+        if (idx < 0) throw new Error("character outside Base32 alphabet");
         val = (val << 5) | idx; bits += 5;
         if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; }
       }
@@ -3083,7 +3090,7 @@ function sha512Bytes(msg){
       var bytes = [0];
       for (var i = 0; i < s.length; i++) {
         var idx = alpha.indexOf(s[i]);
-        if (idx < 0) throw new Error("ký tự ngoài bảng Base58");
+        if (idx < 0) throw new Error("character outside Base58 alphabet");
         var carry = idx;
         for (var j = 0; j < bytes.length; j++) {
           var v = bytes[j] * 58 + carry;
@@ -3121,14 +3128,14 @@ function sha512Bytes(msg){
       return sc;
     }
     function idConfBadge(conf) {
-      if (conf >= 75) return '<span class="badge high">Tin cậy cao · ' + conf + '%</span>';
-      if (conf >= 45) return '<span class="badge mid">Tin cậy trung bình · ' + conf + '%</span>';
-      return '<span class="badge low">Khả năng thấp · ' + conf + '%</span>';
+      if (conf >= 75) return '<span class="badge high">High confidence · ' + conf + '%</span>';
+      if (conf >= 45) return '<span class="badge mid">Medium confidence · ' + conf + '%</span>';
+      return '<span class="badge low">Low confidence · ' + conf + '%</span>';
     }
 
     /* ---------- Magic: hồ sơ tần suất byte + điểm chi-squared ---------- */
     var ID_LANG_FREQ = {"en":"10:0.755,32:15.843,33:0.004,34:0.375,35:0.002,36:0.008,37:0.019,38:0.008,39:0.134,40:0.137,41:0.137,42:0.001,43:0.001,44:0.972,45:0.19,46:0.857,47:0.017,48:0.334,49:0.421,50:0.246,51:0.108,52:0.104,53:0.112,54:0.103,55:0.1,56:0.127,57:0.237,58:0.04,59:0.027,60:0.004,61:0.003,62:0.004,63:0.002,65:0.338,66:0.218,67:0.326,68:0.163,69:0.121,70:0.149,71:0.133,72:0.192,73:0.232,74:0.107,75:0.082,76:0.148,77:0.248,78:0.134,79:0.103,80:0.195,81:0.012,82:0.162,83:0.368,84:0.366,85:0.077,86:0.061,87:0.127,88:0.009,89:0.03,90:0.015,91:0.004,93:0.004,95:0.003,97:6.614,98:1.039,99:2.327,100:2.934,101:9.162,102:1.606,103:1.415,104:3.503,105:5.718,106:0.081,107:0.461,108:3.153,109:1.793,110:5.723,111:5.565,112:1.415,113:0.066,114:5.036,115:4.79,116:6.284,117:1.992,118:0.759,119:1.176,120:0.139,121:1.162,122:0.102,124:0.002,128:0.06,129:0.004,130:0.003,131:0.002,132:0.001,133:0.001,134:0.001,135:0.002,136:0.001,137:0.001,139:0.001,140:0.001,141:0.003,144:0.001,145:0.001,146:0.001,147:0.031,148:0.006,149:0.001,150:0.001,151:0.001,152:0.002,153:0.014,154:0.001,155:0.001,156:0.005,157:0.005,158:0.001,159:0.002,160:0.017,161:0.007,162:0.002,163:0.003,164:0.004,165:0.002,166:0.001,167:0.002,168:0.002,169:0.012,170:0.001,171:0.002,172:0.001,173:0.004,174:0.001,175:0.001,176:0.003,177:0.003,178:0.002,179:0.005,180:0.001,181:0.001,182:0.003,183:0.001,184:0.003,185:0.001,186:0.002,187:0.001,188:0.004,189:0.001,190:0.002,191:0.001,194:0.02,195:0.047,196:0.009,197:0.009,200:0.001,206:0.003,207:0.001,208:0.004,209:0.002,215:0.001,216:0.001,217:0.001,224:0.005,225:0.002,226:0.061,227:0.001,229:0.002,230:0.001,231:0.001,232:0.001,233:0.001","vi":"10:1.205,32:15.546,33:0.002,34:0.241,36:0.001,37:0.015,38:0.013,39:0.009,40:0.13,41:0.13,43:0.002,44:0.714,45:0.089,46:0.813,47:0.02,48:0.259,49:0.361,50:0.203,51:0.104,52:0.097,53:0.104,54:0.089,55:0.089,56:0.116,57:0.194,58:0.047,59:0.017,60:0.002,61:0.002,62:0.002,63:0.002,65:0.148,66:0.175,67:0.293,68:0.111,69:0.056,70:0.04,71:0.092,72:0.206,73:0.057,74:0.03,75:0.119,76:0.232,77:0.178,78:0.247,79:0.036,80:0.156,81:0.056,82:0.062,83:0.184,84:0.397,85:0.022,86:0.114,87:0.033,88:0.033,89:0.019,90:0.009,91:0.005,93:0.005,95:0.003,97:2.683,98:0.66,99:3.149,100:0.627,101:1.148,102:0.076,103:2.542,104:4.362,105:3.528,106:0.019,107:0.59,108:1.486,109:1.611,110:5.924,111:2.001,112:0.761,113:0.201,114:1.559,115:1.014,116:3.555,117:1.77,118:0.861,119:0.05,120:0.173,121:0.826,122:0.047,124:0.002,128:0.021,129:0.214,130:0.011,131:0.478,132:0.002,133:0.039,134:0.001,135:0.324,136:0.002,137:0.072,138:0.001,139:0.198,140:0.002,141:0.32,142:0.002,143:0.048,144:0.141,145:1.485,146:0.001,147:0.116,148:0.015,149:0.106,150:0.001,151:0.025,152:0.002,153:0.579,154:0.004,155:0.289,156:0.004,157:0.257,158:0.005,159:0.174,160:1.516,161:1.221,162:0.326,163:0.818,164:0.013,165:0.337,166:0.005,167:0.51,168:0.014,169:0.324,170:0.408,171:0.115,172:0.147,173:0.492,174:0.002,175:0.218,176:0.82,177:0.26,178:0.102,179:0.383,180:0.379,181:0.016,182:0.006,183:0.094,184:0.005,185:0.132,186:2.233,187:4.628,188:0.009,189:0.062,190:0.003,191:0.385,194:0.047,195:4.542,196:1.653,197:0.065,198:0.997,206:0.002,207:0.001,208:0.011,209:0.004,215:0.001,216:0.001,217:0.001,224:0.003,225:6.74,226:0.019,227:0.004,228:0.002,229:0.009,230:0.006,231:0.004,232:0.003,233:0.003,235:0.001,236:0.001","de":"10:0.726,32:13.303,33:0.002,34:0.278,37:0.007,38:0.003,39:0.005,40:0.149,41:0.149,42:0.015,43:0.001,44:0.636,45:0.237,46:0.922,47:0.023,48:0.305,49:0.472,50:0.225,51:0.115,52:0.11,53:0.121,54:0.108,55:0.11,56:0.145,57:0.271,58:0.049,59:0.022,60:0.002,61:0.002,62:0.002,63:0.001,65:0.413,66:0.383,67:0.144,68:0.412,69:0.275,70:0.258,71:0.273,72:0.218,73:0.18,74:0.167,75:0.277,76:0.201,77:0.328,78:0.179,79:0.111,80:0.254,81:0.012,82:0.219,83:0.602,84:0.209,85:0.1,86:0.185,87:0.206,88:0.005,89:0.01,90:0.112,91:0.002,93:0.002,95:0.006,97:4.417,98:1.306,99:1.99,100:3.615,101:12.382,102:1.106,103:2,104:2.958,105:6.179,106:0.082,107:0.866,108:2.842,109:1.869,110:7.338,111:2.27,112:0.606,113:0.016,114:6.056,115:4.424,116:4.731,117:3.002,118:0.609,119:0.918,120:0.053,121:0.169,122:0.824,128:0.147,129:0.002,130:0.003,131:0.001,132:0.006,133:0.001,134:0.001,135:0.002,136:0.001,137:0.001,140:0.001,141:0.004,146:0.001,147:0.03,150:0.009,151:0.001,152:0.002,153:0.009,154:0.002,155:0.001,156:0.061,158:0.048,159:0.122,160:0.057,161:0.009,162:0.001,163:0.001,164:0.4,165:0.001,166:0.002,167:0.003,168:0.003,169:0.017,170:0.001,171:0.003,172:0.001,173:0.005,175:0.001,176:0.003,177:0.002,178:0.003,179:0.005,180:0.001,181:0.001,182:0.203,184:0.002,185:0.001,186:0.002,187:0.002,188:0.438,189:0.002,190:0.002,191:0.001,194:0.056,195:1.237,196:0.01,197:0.013,200:0.001,202:0.001,206:0.003,207:0.001,208:0.005,209:0.002,225:0.001,226:0.148","fr":"10:0.894,32:15.162,33:0.003,34:0.276,37:0.012,38:0.002,39:0.638,40:0.153,41:0.153,42:0.001,43:0.002,44:0.96,45:0.247,46:0.715,47:0.011,48:0.225,49:0.339,50:0.18,51:0.084,52:0.081,53:0.086,54:0.081,55:0.084,56:0.106,57:0.194,58:0.063,59:0.018,60:0.003,61:0.002,62:0.003,63:0.002,65:0.208,66:0.141,67:0.255,68:0.128,69:0.144,70:0.1,71:0.095,72:0.071,73:0.154,74:0.072,75:0.042,76:0.331,77:0.173,78:0.077,79:0.056,80:0.167,81:0.013,82:0.108,83:0.214,84:0.102,85:0.049,86:0.062,87:0.035,88:0.009,89:0.014,90:0.011,91:0.003,93:0.003,95:0.004,97:5.761,98:0.627,99:2.287,100:3.136,101:10.738,102:0.723,103:0.838,104:0.669,105:5.295,106:0.172,107:0.12,108:4.204,109:1.941,110:5.522,111:4.015,112:2.005,113:0.584,114:5.043,115:5.545,116:5.13,117:4.06,118:0.906,119:0.051,120:0.295,121:0.278,122:0.085,124:0.001,128:0.136,129:0.003,130:0.004,131:0.002,132:0.001,133:0.001,134:0.001,135:0.002,136:0.001,137:0.034,140:0.001,141:0.004,142:0.001,144:0.001,145:0.001,146:0.001,147:0.019,148:0.003,151:0.001,152:0.001,153:0.112,154:0.001,155:0.002,156:0.001,157:0.001,159:0.001,160:0.367,161:0.007,162:0.034,163:0.001,164:0.003,165:0.001,166:0.003,167:0.046,168:0.303,169:1.817,170:0.082,171:0.045,172:0.001,173:0.004,174:0.029,175:0.017,176:0.004,177:0.002,178:0.002,179:0.005,180:0.038,181:0.001,182:0.003,184:0.002,185:0.02,186:0.002,187:0.054,188:0.004,189:0.001,190:0.001,191:0.001,194:0.113,195:2.813,196:0.007,197:0.026,200:0.001,201:0.001,203:0.001,206:0.003,207:0.001,208:0.005,209:0.002,215:0.001,216:0.001,217:0.001,224:0.001,225:0.001,226:0.122,227:0.001,229:0.001,230:0.001","es":"10:0.757,32:15.771,33:0.003,34:0.315,35:0.001,36:0.004,37:0.019,38:0.003,39:0.014,40:0.132,41:0.133,42:0.001,43:0.001,44:0.976,45:0.078,46:0.703,47:0.014,48:0.268,49:0.331,50:0.197,51:0.095,52:0.086,53:0.095,54:0.085,55:0.084,56:0.105,57:0.183,58:0.053,59:0.027,60:0.001,61:0.002,62:0.002,63:0.002,65:0.242,66:0.129,67:0.28,68:0.129,69:0.322,70:0.105,71:0.099,72:0.077,73:0.116,74:0.074,75:0.034,76:0.209,77:0.196,78:0.086,79:0.059,80:0.187,81:0.009,82:0.118,83:0.247,84:0.128,85:0.061,86:0.072,87:0.033,88:0.023,89:0.018,90:0.013,91:0.005,93:0.005,95:0.003,97:8.9,98:0.939,99:3.234,100:4.015,101:9.642,102:0.603,103:0.891,104:0.531,105:5.007,106:0.262,107:0.107,108:4.355,109:1.915,110:5.487,111:6.224,112:1.805,113:0.423,114:4.992,115:5.086,116:3.402,117:2.878,118:0.667,119:0.044,120:0.125,121:0.673,122:0.299,124:0.001,128:0.033,129:0.009,130:0.002,131:0.002,132:0.001,133:0.001,134:0.001,135:0.001,136:0.001,137:0.003,139:0.001,140:0.001,141:0.003,144:0.001,145:0.001,146:0.001,147:0.006,148:0.006,149:0.001,151:0.001,152:0.001,153:0.003,154:0.001,155:0.001,156:0.008,157:0.008,158:0.001,159:0.001,160:0.025,161:0.274,162:0.002,163:0.002,164:0.002,165:0.001,166:0.001,167:0.002,168:0.002,169:0.221,170:0.003,171:0.019,172:0.001,173:0.373,174:0.001,175:0.001,176:0.005,177:0.144,178:0.01,179:0.631,180:0.002,181:0.001,182:0.002,183:0.001,184:0.002,185:0.001,186:0.102,187:0.018,188:0.006,189:0.002,190:0.002,191:0.002,194:0.079,195:1.766,196:0.003,197:0.005,206:0.005,207:0.002,208:0.008,209:0.003,215:0.001,216:0.002,217:0.001,224:0.002,225:0.001,226:0.032,227:0.001,229:0.001,230:0.001","ru":"10:0.512,32:7.274,33:0.002,34:0.063,36:0.001,37:0.009,38:0.001,39:0.001,40:0.118,41:0.118,43:0.001,44:0.595,45:0.135,46:0.534,47:0.009,48:0.18,49:0.281,50:0.15,51:0.078,52:0.076,53:0.077,54:0.068,55:0.066,56:0.083,57:0.16,58:0.036,59:0.016,60:0.002,61:0.001,62:0.002,63:0.001,65:0.013,66:0.009,67:0.014,68:0.009,69:0.007,70:0.006,71:0.007,72:0.006,73:0.031,74:0.002,75:0.003,76:0.007,77:0.012,78:0.007,79:0.005,80:0.01,81:0.001,82:0.008,83:0.017,84:0.011,85:0.003,86:0.009,87:0.005,88:0.012,89:0.001,90:0.001,91:0.001,93:0.001,95:0.003,97:0.065,98:0.009,99:0.022,100:0.021,101:0.074,102:0.01,103:0.013,104:0.019,105:0.054,106:0.001,107:0.008,108:0.036,109:0.02,110:0.047,111:0.055,112:0.013,113:0.001,114:0.052,115:0.037,116:0.041,117:0.026,118:0.007,119:0.006,120:0.003,121:0.011,122:0.003,128:2.469,129:2.363,130:2.342,131:0.986,132:0.156,133:0.422,134:0.252,135:0.495,136:0.217,137:0.136,138:0.014,139:0.778,140:0.56,141:0.097,142:0.251,143:0.811,144:0.09,145:0.184,146:0.165,147:0.06,148:0.179,149:0.021,150:0.013,151:0.029,152:0.05,153:0.005,154:0.116,155:0.045,156:0.087,157:0.073,158:0.067,159:0.124,160:0.211,161:0.16,162:0.055,163:0.033,164:0.036,165:0.024,166:0.013,167:0.02,168:0.022,169:0.002,171:0.1,173:0.025,174:0.009,175:0.011,176:3.536,177:0.619,178:1.963,179:0.833,180:1.275,181:3.452,182:0.323,183:0.635,184:3.408,185:0.642,186:1.486,187:1.967,188:1.26,189:2.857,190:4.587,191:1.082,194:0.339,195:0.003,196:0.001,197:0.001,204:0.013,206:0.002,207:0.001,208:31.356,209:12.318,226:0.131,229:0.001","zh":"10:1.074,32:0.273,33:0.003,34:0.045,36:0.001,37:0.012,38:0.001,39:0.004,40:0.032,41:0.032,42:0.001,43:0.003,44:0.032,45:0.068,46:0.063,47:0.017,48:0.386,49:0.478,50:0.308,51:0.149,52:0.134,53:0.146,54:0.127,55:0.121,56:0.136,57:0.231,58:0.018,59:0.009,60:0.007,61:0.006,62:0.007,65:0.045,66:0.029,67:0.041,68:0.028,69:0.022,70:0.017,71:0.02,72:0.019,73:0.025,74:0.01,75:0.013,76:0.02,77:0.033,78:0.021,79:0.018,80:0.028,81:0.002,82:0.022,83:0.045,84:0.031,85:0.01,86:0.013,87:0.012,88:0.007,89:0.005,90:0.003,91:0.004,93:0.004,95:0.009,97:0.159,98:0.026,99:0.051,100:0.047,101:0.17,102:0.025,103:0.032,104:0.057,105:0.124,106:0.003,107:0.021,108:0.089,109:0.049,110:0.12,111:0.129,112:0.028,113:0.002,114:0.124,115:0.083,116:0.1,117:0.058,118:0.016,119:0.016,120:0.008,121:0.03,122:0.012,123:0.006,124:0.004,125:0.006,126:0.001,128:2.707,129:1.09,130:1.398,131:0.705,132:1.23,133:1.04,134:0.715,135:0.952,136:1.455,137:1.297,138:0.845,139:1.19,140:2.403,141:1.193,142:0.813,143:1.077,144:0.889,145:0.565,146:0.387,147:0.47,148:0.931,149:0.663,150:1.035,151:0.837,152:0.77,153:0.772,154:1.434,155:1.023,156:1.668,157:0.609,158:0.437,159:0.793,160:0.535,161:0.706,162:0.48,163:0.538,164:0.785,165:0.909,166:0.7,167:0.697,168:1.017,169:0.519,170:0.441,171:0.567,172:0.626,173:1.082,174:0.814,175:1.054,176:1.074,177:0.811,178:0.556,179:0.684,180:0.903,181:0.43,182:0.642,183:0.78,184:2.083,185:1.147,186:2.006,187:1.331,188:2.547,189:1.015,190:0.911,191:0.807,194:0.069,195:0.007,196:0.001,197:0.001,206:0.003,207:0.001,208:0.005,209:0.002,216:0.001,217:0.001,224:0.002,225:0.001,226:0.126,227:1.369,228:3.539,229:8.968,230:5.44,231:4.358,232:3.141,233:2.48,235:0.001,236:0.001,239:1.821","ja":"10:0.834,32:0.258,33:0.007,34:0.036,35:0.001,37:0.005,38:0.002,39:0.003,40:0.033,41:0.033,43:0.002,44:0.019,45:0.052,46:0.026,47:0.009,48:0.281,49:0.407,50:0.259,51:0.126,52:0.108,53:0.109,54:0.095,55:0.092,56:0.104,57:0.184,58:0.008,59:0.001,60:0.002,61:0.002,62:0.002,63:0.001,65:0.048,66:0.026,67:0.039,68:0.027,69:0.028,70:0.022,71:0.018,72:0.016,73:0.03,74:0.012,75:0.014,76:0.02,77:0.03,78:0.025,79:0.025,80:0.026,81:0.002,82:0.026,83:0.045,84:0.031,85:0.013,86:0.014,87:0.014,88:0.006,89:0.006,90:0.003,91:0.001,93:0.001,95:0.002,97:0.077,98:0.012,99:0.03,100:0.026,101:0.088,102:0.012,103:0.017,104:0.025,105:0.067,106:0.002,107:0.016,108:0.041,109:0.039,110:0.059,111:0.066,112:0.016,113:0.001,114:0.06,115:0.043,116:0.051,117:0.028,118:0.009,119:0.007,120:0.004,121:0.015,122:0.004,124:0.011,128:2.555,129:10.322,130:5.875,131:4.462,132:0.784,133:0.468,134:0.442,135:0.409,136:1.173,137:0.96,138:0.657,139:1.448,140:1.442,141:0.636,142:0.341,143:0.685,144:0.495,145:0.342,146:0.651,147:0.536,148:0.435,149:0.657,150:0.51,151:0.978,152:0.31,153:0.563,154:0.439,155:0.514,156:0.668,157:0.438,158:0.29,159:1.039,160:0.423,161:0.532,162:0.407,163:0.691,164:0.677,165:0.555,166:0.911,167:0.887,168:1.086,169:0.531,170:0.836,171:1.345,172:0.438,173:0.666,174:1.528,175:0.959,176:0.535,177:0.379,178:0.302,179:0.822,180:0.614,181:0.308,182:0.253,183:0.467,184:0.807,185:0.807,186:0.777,187:0.809,188:1.292,189:0.546,190:0.524,191:0.425,194:0.002,195:0.004,196:0.001,206:0.002,207:0.001,208:0.002,209:0.001,216:0.001,224:0.002,226:0.015,227:19.387,228:1.167,229:4.022,230:2.518,231:1.734,232:1.339,233:1.229,239:0.409","ko":"10:0.893,32:8.919,33:0.003,34:0.069,37:0.007,38:0.002,39:0.048,40:0.269,41:0.269,43:0.002,44:0.501,45:0.04,46:0.699,47:0.01,48:0.29,49:0.417,50:0.259,51:0.125,52:0.109,53:0.112,54:0.1,55:0.094,56:0.109,57:0.192,58:0.015,59:0.002,60:0.006,61:0.002,62:0.006,63:0.003,65:0.038,66:0.026,67:0.038,68:0.022,69:0.02,70:0.024,71:0.015,72:0.013,73:0.023,74:0.008,75:0.015,76:0.017,77:0.027,78:0.016,79:0.016,80:0.023,81:0.002,82:0.017,83:0.041,84:0.027,85:0.011,86:0.013,87:0.01,88:0.005,89:0.004,90:0.002,91:0.006,93:0.006,95:0.012,97:0.108,98:0.014,99:0.037,100:0.031,101:0.116,102:0.024,103:0.022,104:0.032,105:0.084,106:0.002,107:0.021,108:0.064,109:0.06,110:0.077,111:0.092,112:0.02,113:0.001,114:0.086,115:0.056,116:0.066,117:0.046,118:0.011,119:0.008,120:0.004,121:0.019,122:0.004,124:0.002,126:0.025,128:2.21,129:0.565,130:0.766,131:0.471,132:3.043,133:0.671,134:0.334,135:0.049,136:1.404,137:0.218,138:1.17,139:1.657,140:1.23,141:0.278,142:0.091,143:0.557,144:1.645,145:0.451,146:0.058,147:0.386,148:1.38,149:2.193,150:0.506,151:1.29,152:2.708,153:0.68,154:0.385,155:0.399,156:2.758,157:3.352,158:0.954,159:0.141,160:1.848,161:0.829,162:0.071,163:0.249,164:1.741,165:0.637,166:0.43,167:0.888,168:0.537,169:0.506,170:0.243,171:0.027,172:1.4,173:0.355,174:0.026,175:0.179,176:2.38,177:0.404,178:0.739,179:1.021,180:2.205,181:0.729,182:0.454,183:0.308,184:1.635,185:0.561,186:0.035,187:0.084,188:1.612,189:0.309,190:0.024,191:0.047,194:0.034,195:0.005,196:0.001,197:0.001,206:0.003,207:0.001,208:0.006,209:0.002,216:0.001,217:0.001,224:0.001,225:0.001,226:0.039,227:0.089,228:0.025,229:0.107,230:0.071,231:0.044,232:0.037,233:0.043,234:3.199,235:8.716,236:12.558,237:3.298,239:0.002","it":"10:0.828,32:14.918,33:0.002,34:0.385,36:0.001,37:0.007,38:0.003,39:0.383,40:0.13,41:0.131,43:0.001,44:0.948,45:0.103,46:0.657,47:0.014,48:0.252,49:0.332,50:0.195,51:0.093,52:0.089,53:0.095,54:0.088,55:0.084,56:0.098,57:0.183,58:0.061,59:0.035,60:0.006,61:0.002,62:0.006,63:0.001,65:0.215,66:0.131,67:0.235,68:0.125,69:0.08,70:0.104,71:0.125,72:0.057,73:0.24,74:0.04,75:0.038,76:0.208,77:0.179,78:0.133,79:0.054,80:0.164,81:0.025,82:0.114,83:0.256,84:0.12,85:0.052,86:0.079,87:0.038,88:0.021,89:0.012,90:0.012,91:0.002,93:0.002,95:0.005,97:8.583,98:0.65,99:3.106,100:3.081,101:8.81,102:0.801,103:1.321,104:0.694,105:8.492,106:0.02,107:0.115,108:5.238,109:1.88,110:5.659,111:6.812,112:1.981,113:0.236,114:4.962,115:3.674,116:5.112,117:2.35,118:1.107,119:0.055,120:0.027,121:0.118,122:0.709,124:0.001,128:0.022,129:0.004,130:0.002,131:0.002,132:0.001,133:0.001,134:0.001,135:0.002,136:0.013,137:0.001,140:0.001,141:0.004,144:0.001,145:0.001,147:0.006,148:0.001,150:0.001,151:0.001,152:0.001,153:0.005,155:0.001,156:0.005,157:0.005,159:0.001,160:0.153,161:0.007,162:0.001,163:0.001,164:0.003,165:0.001,166:0.001,167:0.002,168:0.174,169:0.033,170:0.004,171:0.009,172:0.036,173:0.004,174:0.001,175:0.001,176:0.006,177:0.003,178:0.097,179:0.004,180:0.001,181:0.001,182:0.003,183:0.001,184:0.002,185:0.056,186:0.009,187:0.007,188:0.004,189:0.002,190:0.002,191:0.002,194:0.043,195:0.574,196:0.01,197:0.009,200:0.001,202:0.001,206:0.005,207:0.002,208:0.007,209:0.003,215:0.001,216:0.001,217:0.001,224:0.001,225:0.002,226:0.021,227:0.001,229:0.001,230:0.001","pt":"10:0.934,32:15.319,33:0.004,34:0.372,35:0.001,36:0.002,37:0.012,38:0.004,39:0.016,40:0.15,41:0.15,42:0.001,43:0.002,44:1.16,45:0.21,46:0.746,47:0.022,48:0.296,49:0.361,50:0.226,51:0.106,52:0.098,53:0.105,54:0.096,55:0.094,56:0.114,57:0.207,58:0.054,59:0.022,60:0.006,61:0.004,62:0.006,63:0.002,65:0.345,66:0.166,67:0.295,68:0.143,69:0.233,70:0.136,71:0.112,72:0.077,73:0.129,74:0.093,75:0.039,76:0.119,77:0.217,78:0.135,79:0.164,80:0.222,81:0.016,82:0.14,83:0.259,84:0.142,85:0.064,86:0.078,87:0.041,88:0.021,89:0.013,90:0.012,91:0.007,93:0.007,95:0.007,97:9.026,98:0.717,99:2.572,100:4.173,101:8.551,102:0.751,103:0.906,104:0.629,105:5.107,106:0.172,107:0.12,108:2.357,109:3.189,110:4.024,111:7.683,112:1.87,113:0.445,114:5.017,115:5.188,116:3.559,117:2.852,118:0.875,119:0.055,120:0.186,121:0.122,122:0.257,124:0.002,128:0.034,129:0.01,130:0.003,131:0.003,132:0.001,133:0.001,134:0.001,135:0.001,136:0.001,137:0.014,138:0.001,139:0.001,140:0.001,141:0.005,142:0.001,144:0.001,145:0.001,146:0.001,147:0.009,148:0.006,151:0.001,152:0.001,153:0.003,154:0.001,155:0.001,156:0.007,157:0.007,159:0.001,160:0.079,161:0.267,162:0.045,163:0.508,164:0.002,165:0.001,166:0.001,167:0.424,168:0.003,169:0.417,170:0.113,171:0.003,172:0.001,173:0.255,174:0.001,175:0.001,176:0.005,177:0.003,178:0.015,179:0.161,180:0.032,181:0.087,182:0.003,183:0.001,184:0.002,185:0.001,186:0.095,187:0.002,188:0.005,189:0.001,190:0.001,191:0.001,194:0.067,195:2.471,196:0.004,197:0.006,206:0.004,207:0.002,208:0.007,209:0.002,215:0.001,216:0.001,217:0.001,224:0.001,225:0.001,226:0.033,227:0.002,229:0.001,230:0.001,236:0.001","nl":"10:1.158,32:14.747,33:0.002,34:0.267,36:0.001,37:0.008,38:0.01,39:0.052,40:0.196,41:0.196,43:0.001,44:0.504,45:0.205,46:0.944,47:0.013,48:0.311,49:0.428,50:0.229,51:0.104,52:0.101,53:0.109,54:0.102,55:0.102,56:0.137,57:0.252,58:0.048,59:0.012,60:0.002,61:0.001,62:0.002,63:0.001,65:0.205,66:0.192,67:0.181,68:0.371,69:0.131,70:0.088,71:0.11,72:0.236,73:0.167,74:0.069,75:0.091,76:0.119,77:0.172,78:0.137,79:0.117,80:0.141,81:0.005,82:0.112,83:0.229,84:0.137,85:0.034,86:0.123,87:0.084,88:0.006,89:0.011,90:0.064,91:0.001,93:0.001,95:0.002,97:6.042,98:1.063,99:1.294,100:4.124,101:13.689,102:0.579,103:2.105,104:1.822,105:5.542,106:0.948,107:1.42,108:3.124,109:1.72,110:7.129,111:4.759,112:1.349,113:0.015,114:5.115,115:3.623,116:4.903,117:1.642,118:1.84,119:1.06,120:0.063,121:0.226,122:0.656,124:0.001,128:0.023,129:0.003,130:0.004,131:0.003,132:0.002,133:0.001,134:0.001,135:0.002,136:0.001,137:0.002,139:0.001,140:0.001,141:0.002,142:0.001,143:0.001,144:0.001,145:0.001,146:0.001,147:0.008,148:0.001,150:0.001,151:0.001,152:0.002,153:0.007,154:0.001,155:0.001,156:0.003,157:0.003,158:0.001,159:0.002,160:0.008,161:0.009,162:0.003,163:0.002,164:0.005,165:0.002,166:0.001,167:0.003,168:0.009,169:0.038,170:0.001,171:0.051,172:0.001,173:0.005,174:0.001,175:0.011,176:0.004,177:0.003,178:0.013,179:0.008,180:0.002,181:0.002,182:0.008,183:0.001,184:0.004,185:0.001,186:0.003,187:0.002,188:0.01,189:0.003,190:0.003,191:0.001,194:0.02,195:0.166,196:0.007,197:0.01,200:0.001,206:0.004,207:0.002,208:0.016,209:0.005,215:0.001,216:0.002,217:0.001,224:0.001,225:0.002,226:0.022,227:0.001,229:0.001,230:0.001,231:0.001"};
-    var ID_LANG_NAMES = { en: "tiếng Anh", vi: "tiếng Việt", de: "tiếng Đức", fr: "tiếng Pháp", es: "tiếng Tây Ban Nha", ru: "tiếng Nga", zh: "tiếng Trung", ja: "tiếng Nhật", ko: "tiếng Hàn", it: "tiếng Ý", pt: "tiếng Bồ Đào Nha", nl: "tiếng Hà Lan" };
+    var ID_LANG_NAMES = { en: "English", vi: "Vietnamese", de: "German", fr: "French", es: "Spanish", ru: "Russian", zh: "Chinese", ja: "Japanese", ko: "Korean", it: "Italian", pt: "Portuguese", nl: "Dutch" };
     var ID_LANGS = Object.keys(ID_LANG_FREQ).map(function (code) {
       var arr = new Float64Array(256).fill(0.0001);
       ID_LANG_FREQ[code].split(",").forEach(function (p) { var kv = p.split(":"); arr[+kv[0]] = +kv[1]; });
@@ -3188,7 +3195,7 @@ function sha512Bytes(msg){
     /* ---------- Magic: các bộ giải mã tối thiểu cho từng tiêu chí ---------- */
     function idDecBinaryStr(str) {
       var bits = str.replace(/[^01]/g, "");
-      if (!bits.length || bits.length % 8) throw new Error("số bit không chia hết cho 8");
+      if (!bits.length || bits.length % 8) throw new Error("bit count not divisible by 8");
       var out = new Uint8Array(bits.length / 8);
       for (var i = 0; i < out.length; i++) out[i] = parseInt(bits.substr(i * 8, 8), 2);
       return out;
@@ -3196,13 +3203,13 @@ function sha512Bytes(msg){
     function idDecOctalStr(str) {
       var toks = str.trim().split(/[\s,;:]+/).filter(function (t) { return t.length; });
       var out = new Uint8Array(toks.length);
-      toks.forEach(function (t, i) { var v = parseInt(t, 8); if (isNaN(v) || v > 255) throw new Error("token bát phân > 255"); out[i] = v; });
+      toks.forEach(function (t, i) { var v = parseInt(t, 8); if (isNaN(v) || v > 255) throw new Error("octal token > 255"); out[i] = v; });
       return out;
     }
     function idDecDecimalStr(str) {
       var toks = str.trim().split(/[\s,;:]+/).filter(function (t) { return t.length; });
       var out = new Uint8Array(toks.length);
-      toks.forEach(function (t, i) { var v = parseInt(t, 10); if (isNaN(v) || v > 255) throw new Error("token thập phân > 255"); out[i] = v; });
+      toks.forEach(function (t, i) { var v = parseInt(t, 10); if (isNaN(v) || v > 255) throw new Error("decimal token > 255"); out[i] = v; });
       return out;
     }
     function idDecMorseStr(str) {
@@ -3211,7 +3218,7 @@ function sha512Bytes(msg){
     }
     function idDecBaconStr(str, complete) {
       var bits = str.replace(/\s+/g, "").replace(/[aA]/g, "0").replace(/[bB]/g, "1");
-      if (!/^[01]+$/.test(bits) || bits.length % 5) throw new Error("không phải nhóm 5 bit Bacon");
+      if (!/^[01]+$/.test(bits) || bits.length % 5) throw new Error("not 5-bit Bacon groups");
       var alpha = complete ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHIKLMNOPQRSTUWXYZ";
       var out = "";
       for (var i = 0; i + 5 <= bits.length; i += 5) { var v = parseInt(bits.substr(i, 5), 2); out += v < alpha.length ? alpha[v] : "?"; }
@@ -3220,7 +3227,7 @@ function sha512Bytes(msg){
     function idDecA1Z26Str(str) {
       var toks = str.trim().split(/[\s,;:]+/).filter(function (t) { return t.length; });
       var out = "";
-      toks.forEach(function (t) { var n = parseInt(t, 10); if (isNaN(n) || n < 1 || n > 26) throw new Error("số ngoài 1-26"); out += String.fromCharCode(64 + n); });
+      toks.forEach(function (t) { var n = parseInt(t, 10); if (isNaN(n) || n < 1 || n > 26) throw new Error("number outside 1-26"); out += String.fromCharCode(64 + n); });
       return te.encode(out);
     }
     function idDecQPStr(str) {
@@ -3258,18 +3265,18 @@ function sha512Bytes(msg){
       { label: "Hex", compactOk: true, patterns: [/^(?:[\dA-F]{2})+$/i, /^[\dA-F]{2}(?: [\dA-F]{2})*$/i, /^[\dA-F]{2}(?:,[\dA-F]{2})*$/i, /^[\dA-F]{2}(?:;[\dA-F]{2})*$/i, /^[\dA-F]{2}(?::[\dA-F]{2})*$/i, /^[\dA-F]{2}(?:\n[\dA-F]{2})*$/i, /^(?:0x[\dA-F]{2})+$/i, /^0x[\dA-F]{2}(?:,0x[\dA-F]{2})*$/i, /^(?:\\x[\dA-F]{2})+$/i], decode: function (str) { return hexToBytes(str); } },
       { label: "Base32", compactOk: true, patterns: [/^(?:[A-Z2-7]{8})+(?:[A-Z2-7]{2}={6}|[A-Z2-7]{4}={4}|[A-Z2-7]{5}={3}|[A-Z2-7]{7}={1})?$/, /^(?:[a-z2-7]{8})+(?:[a-z2-7]{2}={6}|[a-z2-7]{4}={4}|[a-z2-7]{5}={3}|[a-z2-7]{7}={1})?$/], decode: function (str) { return idDecodeBase32(str); } },
       { label: "Base58", compactOk: true, patterns: [/^[1-9A-HJ-NP-Za-km-z]{20,}$/], decode: function (str) { return idDecodeBase58(str); } },
-      { label: "Nhị phân (binary)", patterns: [/^(?:[01]{8})+$/, /^(?:[01]{8})(?: [01]{8})*$/, /^(?:[01]{8})(?:,[01]{8})*$/, /^(?:[01]{8})(?:;[01]{8})*$/, /^(?:[01]{8})(?::[01]{8})*$/, /^(?:[01]{8})(?:\n[01]{8})*$/], decode: idDecBinaryStr },
-      { label: "Bát phân (octal)", patterns: [/^(?:[0-7]{1,2}|[123][0-7]{2})(?: (?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?:,(?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?:;(?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?::(?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?:\n(?:[0-7]{1,2}|[123][0-7]{2}))*$/], decode: idDecOctalStr },
-      { label: "Thập phân (byte thập phân)", patterns: [/^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?: (?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?:,(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?:;(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?::(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?:\n(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/], decode: idDecDecimalStr },
+      { label: "Binary", patterns: [/^(?:[01]{8})+$/, /^(?:[01]{8})(?: [01]{8})*$/, /^(?:[01]{8})(?:,[01]{8})*$/, /^(?:[01]{8})(?:;[01]{8})*$/, /^(?:[01]{8})(?::[01]{8})*$/, /^(?:[01]{8})(?:\n[01]{8})*$/], decode: idDecBinaryStr },
+      { label: "Octal", patterns: [/^(?:[0-7]{1,2}|[123][0-7]{2})(?: (?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?:,(?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?:;(?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?::(?:[0-7]{1,2}|[123][0-7]{2}))*$/, /^(?:[0-7]{1,2}|[123][0-7]{2})(?:\n(?:[0-7]{1,2}|[123][0-7]{2}))*$/], decode: idDecOctalStr },
+      { label: "Decimal (decimal bytes)", patterns: [/^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?: (?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?:,(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?:;(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?::(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/, /^(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5])(?:\n(?:\d{1,2}|1\d{2}|2[0-4]\d|25[0-5]))*$/], decode: idDecDecimalStr },
       { label: "Morse", patterns: [/(?:^[-. \n]{5,}$|^[_. \n]{5,}$|^(?:dash|dot| |\n){5,}$)/i, /^[-.\/ \n]{5,}$/], decode: idDecMorseStr },
-      { label: "Bacon (bảng chuẩn, I=J và U=V)", compactOk: true, patterns: [/^\s*([01]{5}\s?)+$/, /^\s*([AB]{5}\s?)+$/], decode: function (str) { return idDecBaconStr(str, false); } },
-      { label: "Bacon (bảng đầy đủ 26 chữ)", compactOk: true, patterns: [/^\s*([01]{5}\s?)+$/, /^\s*([AB]{5}\s?)+$/], decode: function (str) { return idDecBaconStr(str, true); } },
-      { label: "Bát phân (octal, nhóm 3 liền nhau)", patterns: [], testFn: function (str) { return /^[0-7]+$/.test(str) && str.length >= 6 && str.length % 3 === 0; }, decode: function (str) { var out = new Uint8Array(str.length / 3); for (var i = 0; i < out.length; i++) { var v = parseInt(str.substr(i * 3, 3), 8); if (v > 255) throw new Error("nhóm bát phân > 255"); out[i] = v; } return out; } },
+      { label: "Bacon (standard alphabet, I=J, U=V)", compactOk: true, patterns: [/^\s*([01]{5}\s?)+$/, /^\s*([AB]{5}\s?)+$/], decode: function (str) { return idDecBaconStr(str, false); } },
+      { label: "Bacon (full 26-letter alphabet)", compactOk: true, patterns: [/^\s*([01]{5}\s?)+$/, /^\s*([AB]{5}\s?)+$/], decode: function (str) { return idDecBaconStr(str, true); } },
+      { label: "Octal (contiguous 3-digit groups)", patterns: [], testFn: function (str) { return /^[0-7]+$/.test(str) && str.length >= 6 && str.length % 3 === 0; }, decode: function (str) { var out = new Uint8Array(str.length / 3); for (var i = 0; i < out.length; i++) { var v = parseInt(str.substr(i * 3, 3), 8); if (v > 255) throw new Error("octal group > 255"); out[i] = v; } return out; } },
       { label: "A1Z26", patterns: [/^\s*(?:0?[1-9]|1[0-9]|2[0-6])(?: (?:0?[1-9]|1[0-9]|2[0-6]))*\s*$/, /^\s*(?:0?[1-9]|1[0-9]|2[0-6])(?:,(?:0?[1-9]|1[0-9]|2[0-6]))*\s*$/, /^\s*(?:0?[1-9]|1[0-9]|2[0-6])(?:;(?:0?[1-9]|1[0-9]|2[0-6]))*\s*$/, /^\s*(?:0?[1-9]|1[0-9]|2[0-6])(?::(?:0?[1-9]|1[0-9]|2[0-6]))*\s*$/, /^\s*(?:0?[1-9]|1[0-9]|2[0-6])(?:\n(?:0?[1-9]|1[0-9]|2[0-6]))*\s*$/], decode: idDecA1Z26Str },
       { label: "Quoted-printable", patterns: [/^[\x21-\x3d\x3f-\x7e \t]{0,76}(?:=[\da-f]{2}|=\r?\n)(?:[\x21-\x3d\x3f-\x7e \t]|=[\da-f]{2}|=\r?\n)*$/i], decode: idDecQPStr },
       { label: "URL encoding", patterns: [], testFn: function (str) { return (str.match(/%[\da-f]{2}/gi) || []).length >= 4; }, decode: idDecURLStr },
       { label: "HTML entities", patterns: [/&(?:#\d{2,3}|#x[\da-f]{2}|[a-z]{2,6});/i], decode: idDecHTMLEntStr },
-      { label: "Chuỗi thoát Unicode (\\u, %u, U+)", patterns: [/\\u(?:[\da-f]{4,6})/i, /%u(?:[\da-f]{4,6})/i, /U\+(?:[\da-f]{4,6})/i], decode: idDecUniEscStr }
+      { label: "Unicode escapes (\\u, %u, U+)", patterns: [/\\u(?:[\da-f]{4,6})/i, /%u(?:[\da-f]{4,6})/i, /U\+(?:[\da-f]{4,6})/i], decode: idDecUniEscStr }
     ];
     function idCriterionMatches(crit, str) {
       if (crit.testFn) return crit.testFn(str);
@@ -3311,10 +3318,10 @@ function sha512Bytes(msg){
       var name, evidence;
       if (m.ft) {
         name = chainLabel + " → file " + m.ft.name + " (." + m.ft.ext + ")";
-        evidence = "." + m.ft.ext + " · " + m.ft.mime + " · " + bytes.length.toLocaleString("vi-VN") + " byte · hex: " + bytesToHex(bytes.subarray(0, 12));
+        evidence = "." + m.ft.ext + " · " + m.ft.mime + " · " + bytes.length.toLocaleString("en-US") + " byte · hex: " + bytesToHex(bytes.subarray(0, 12));
       } else {
-        name = (chainLabel.indexOf("→") >= 0 ? "Mã hoá lồng nhau: " : "Mã hoá ") + chainLabel;
-        evidence = (m.utf8 ? "UTF-8" : "không UTF-8") + " · χ² " + (m.lang.score === Infinity ? "∞" : Math.round(m.lang.score).toLocaleString("vi-VN")) + (m.lang.prob > 0 ? " · " + (ID_LANG_NAMES[m.lang.lang] || m.lang.lang) : "") + " · entropy " + m.ent.toFixed(2) + " · điểm " + (m.score === Infinity ? "∞" : Math.round(m.score).toLocaleString("vi-VN"));
+        name = (chainLabel.indexOf("→") >= 0 ? "Nested encoding: " : "Encoding ") + chainLabel;
+        evidence = (m.utf8 ? "UTF-8" : "not UTF-8") + " · χ² " + (m.lang.score === Infinity ? "∞" : Math.round(m.lang.score).toLocaleString("en-US")) + (m.lang.prob > 0 ? " · " + (ID_LANG_NAMES[m.lang.lang] || m.lang.lang) : "") + " · entropy " + m.ent.toFixed(2) + " · score " + (m.score === Infinity ? "∞" : Math.round(m.score).toLocaleString("en-US"));
       }
       add(name, idBranchConf(m), evidence, isText ? idBytesPreview(bytes) : null, bytes, null,
         { mScore: m.score, fileName: m.ft ? "decoded." + m.ft.ext : null });
@@ -3366,7 +3373,7 @@ function sha512Bytes(msg){
       idImgUrls = [];
       elIdResults.innerHTML = "";
       if (!s) {
-        elIdStatus.textContent = "Chưa có input.";
+        elIdStatus.textContent = "No input yet.";
         elIdStatus.className = "status dim";
         elIdStatsCard.style.display = "none";
         elIdResultsWrap.style.display = "none";
@@ -3387,19 +3394,19 @@ function sha512Bytes(msg){
       var nUpper = (compact.match(/[A-Z]/g) || []).length;
       var nHexCh = (compact.match(/[0-9a-fA-F]/g) || []).length;
       var ent = idEntropy(compact);
-      var charsetNote = "chữ thường + số";
+      var charsetNote = "lowercase + digits";
       var kinds = [];
-      if (nLower) kinds.push("thường " + nLower);
-      if (nUpper) kinds.push("HOA " + nUpper);
-      if (nDigit) kinds.push("số " + nDigit);
+      if (nLower) kinds.push("lower " + nLower);
+      if (nUpper) kinds.push("upper " + nUpper);
+      if (nDigit) kinds.push("digits " + nDigit);
       var nOther = compact.length - nLower - nUpper - nDigit;
-      if (nOther) kinds.push("ký tự khác " + nOther);
+      if (nOther) kinds.push("other " + nOther);
       charsetNote = kinds.join(" · ");
       var statRows = [
-        ["Độ dài", compact.length.toLocaleString("vi-VN") + " ký tự" + (raw.length !== compact.length ? " (" + raw.length + " ký tự gồm khoảng trắng/xuống dòng)" : ""), s.split(/\r?\n/).length + " dòng"],
-        ["Entropy Shannon", ent.toFixed(2) + " bit/ký tự", ""],
-        ["Thành phần ký tự", charsetNote, compact.length && nHexCh === compact.length ? "toàn hex (0-9a-f)" : ""],
-        ["Byte khi đọc dạng UTF-8", te.encode(s).length.toLocaleString("vi-VN") + " byte", /[^\x00-\x7F]/.test(s) ? "ngoài ASCII" : "ASCII"]
+        ["Length", compact.length.toLocaleString("en-US") + " characters" + (raw.length !== compact.length ? " (" + raw.length + " characters incl. whitespace/newlines)" : ""), s.split(/\r?\n/).length + " lines"],
+        ["Entropy Shannon", ent.toFixed(2) + " bits/char", ""],
+        ["Character composition", charsetNote, compact.length && nHexCh === compact.length ? "all hex (0-9a-f)" : ""],
+        ["Bytes as UTF-8", te.encode(s).length.toLocaleString("en-US") + " byte", /[^\x00-\x7F]/.test(s) ? "non-ASCII" : "ASCII"]
       ];
       elIdStats.innerHTML = statRows.map(function (r) {
         return '<div class="claim"><div class="k">' + escapeHtml(r[0]) + '</div><div class="v" style="font-family:var(--sans); font-size:14px;">' + escapeHtml(r[1]) + '</div>' + (r[2] ? '<div class="sub">' + escapeHtml(r[2]) + '</div>' : "") + "</div>";
@@ -3408,8 +3415,8 @@ function sha512Bytes(msg){
 
       /* ----- PEM ----- */
       var pemM = s.match(/-----BEGIN ([A-Z0-9 ]+)-----/);
-      if (pemM) add("Khối PEM — " + pemM[1].trim(), 99, "-----BEGIN " + pemM[1].trim() + "-----", null, null,
-        /PRIVATE KEY/.test(pemM[1]) ? { label: "Đưa sang tab Giải mã RSA", tab: "rsa", rsaKey: true } : null);
+      if (pemM) add("PEM block — " + pemM[1].trim(), 99, "-----BEGIN " + pemM[1].trim() + "-----", null, null,
+        /PRIVATE KEY/.test(pemM[1]) ? { label: "Open in RSA Decryption", tab: "rsa", rsaKey: true } : null);
 
       /* ----- JWT ----- */
       var jwtParts = compact.split(".");
@@ -3418,15 +3425,15 @@ function sha512Bytes(msg){
           var jHeader = JSON.parse(td.decode(b64ToBytes(jwtParts[0], true)));
           var jPayloadTxt = td.decode(b64ToBytes(jwtParts[1], true));
           var jPayload = JSON.parse(jPayloadTxt);
-          add("JWT (JSON Web Token)", 98, "alg=" + String(jHeader.alg || "?") + (jHeader.typ ? " · typ=" + String(jHeader.typ) : "") + (jwtParts[2] ? " · sig " + jwtParts[2].length + " ký tự" : " · sig rỗng"),
+          add("JWT (JSON Web Token)", 98, "alg=" + String(jHeader.alg || "?") + (jHeader.typ ? " · typ=" + String(jHeader.typ) : "") + (jwtParts[2] ? " · sig " + jwtParts[2].length + " characters" : " · sig rỗng"),
             "Header: " + JSON.stringify(jHeader) + "\nPayload: " + JSON.stringify(jPayload), null,
-            { label: "Mở trong JWT Workbench", tab: "jwt", jwt: true });
+            { label: "Open in JWT Workbench", tab: "jwt", jwt: true });
         } catch (e) { /* không phải JWT thật */ }
       }
 
       /* ----- Các định dạng hash có tiền tố ($) ----- */
       if (/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(compact))
-        add("Hash bcrypt", 97, "$2$ · hashcat 3200", null, null, { label: "Lấy lệnh hashcat (mode 3200)", tab: "hashcat", hcMode: "3200" });
+        add("Hash bcrypt", 97, "$2$ · hashcat 3200", null, null, { label: "Get hashcat command (mode 3200)", tab: "hashcat", hcMode: "3200" });
       else if (/^\$argon2(id|i|d)\$/.test(compact))
         add("Hash Argon2", 97, "$argon2$", null, null, null);
       else if (/^\$(1|5|6|y)\$/.test(compact)) {
@@ -3434,19 +3441,19 @@ function sha512Bytes(msg){
         add("Hash Unix crypt (" + cryptName + ")", 95, "$" + compact[1] + "$ · " + cryptName, null, null, null);
       }
       if (/^[a-f0-9]{32}:[a-f0-9]{32}$/i.test(compact))
-        add("Cặp NTLM dạng LM:NT hoặc hash:muối", 70, "hex32 : hex32", null, null, { label: "Đưa vế sau sang Dò hash (NTLM)", tab: "crack", crackHash: compact.split(":")[1], crackAlgo: "ntlm" });
+        add("NTLM pair (LM:NT) or hash:salt", 70, "hex32 : hex32", null, null, { label: "Send second half to Hash Cracker (NTLM)", tab: "crack", crackHash: compact.split(":")[1], crackAlgo: "ntlm" });
 
       /* ----- Hex / hash hex ----- */
       var isHex = /^[0-9a-fA-F]+$/.test(compact) && compact.length >= 2 && compact.length % 2 === 0;
       if (isHex) {
         var hexBytes = null;
         try { hexBytes = hexToBytes(compact); } catch (e) {}
-        var hashByLen = { 8: "CRC-32 / Adler-32", 32: "MD5 hoặc NTLM", 40: "SHA-1 / RIPEMD-160", 56: "SHA-224", 64: "SHA-256", 96: "SHA-384", 128: "SHA-512" };
+        var hashByLen = { 8: "CRC-32 / Adler-32", 32: "MD5 or NTLM", 40: "SHA-1 / RIPEMD-160", 56: "SHA-224", 64: "SHA-256", 96: "SHA-384", 128: "SHA-512" };
         if (hashByLen[compact.length]) {
           var isHashLen = [32, 40, 56, 64, 96, 128].indexOf(compact.length) >= 0;
-          add(isHashLen ? "Hash dạng hex — " + hashByLen[compact.length].split(" — ")[0] : "Checksum dạng hex — " + hashByLen[compact.length], isHashLen ? 82 : 65,
+          add(isHashLen ? "Hex hash — " + hashByLen[compact.length].split(" — ")[0] : "Hex checksum — " + hashByLen[compact.length], isHashLen ? 82 : 65,
             compact.length + " hex",
-            null, null, isHashLen ? { label: "Đưa sang tab Dò hash", tab: "crack", crackHash: compact.toLowerCase(), crackAlgo: compact.length === 40 ? "sha1" : compact.length === 64 ? "sha256" : compact.length === 128 ? "sha512" : "auto" } : null);
+            null, null, isHashLen ? { label: "Send to Hash Cracker", tab: "crack", crackHash: compact.toLowerCase(), crackAlgo: compact.length === 40 ? "sha1" : compact.length === 64 ? "sha256" : compact.length === 128 ? "sha512" : "auto" } : null);
         }
         // Việc đoán "hex này là văn bản hay file" do engine Magic bên dưới đảm nhiệm.
       }
@@ -3462,7 +3469,7 @@ function sha512Bytes(msg){
       if ((s[0] === "{" || s[0] === "[") ) {
         try {
           var parsedJson = JSON.parse(s);
-          add("JSON", 96, "JSON · " + (Array.isArray(parsedJson) ? "mảng" : "đối tượng"), JSON.stringify(parsedJson, null, 2).slice(0, 900), null, null);
+          add("JSON", 96, "JSON · " + (Array.isArray(parsedJson) ? "array" : "object"), JSON.stringify(parsedJson, null, 2).slice(0, 900), null, null);
         } catch (e) {}
       }
       if (/^https?:\/\/\S+$/.test(s)) add("URL", 95, s.split(":")[0] + "://", null, null, null);
@@ -3472,7 +3479,7 @@ function sha512Bytes(msg){
         var ms = compact.length === 13 ? parseInt(compact, 10) : parseInt(compact, 10) * 1000;
         var dt = new Date(ms);
         if (!isNaN(dt.getTime()) && dt.getFullYear() > 1990 && dt.getFullYear() < 2100)
-          add("Timestamp Unix (" + (compact.length === 13 ? "mili-giây" : "giây") + ")", 72, dt.toLocaleString("vi-VN", { hour12: false }), dt.toISOString(), null, null);
+          add("Timestamp Unix (" + (compact.length === 13 ? "milliseconds" : "seconds") + ")", 72, dt.toLocaleString("en-US", { hour12: false }), dt.toISOString(), null, null);
       }
 
       /* ----- ROT / Caesar & đảo ngược ----- */
@@ -3481,7 +3488,7 @@ function sha512Bytes(msg){
         var origScore = idWordScore(s);
         var rot13 = idRot(s, 13);
         var rot13Score = idWordScore(rot13);
-        if (rot13Score > origScore) add("ROT13 (Caesar dịch 13)", 78, "điểm từ: " + rot13Score + " vs " + origScore, rot13, null, null);
+        if (rot13Score > origScore) add("ROT13 (Caesar shift 13)", 78, "word score: " + rot13Score + " vs " + origScore, rot13, null, null);
         else {
           // thử mọi độ dịch Caesar, lấy độ dịch cho điểm cao nhất
           var bestN = 0, bestScore = origScore, bestTxt = "";
@@ -3490,12 +3497,12 @@ function sha512Bytes(msg){
             var cand = idRot(s, rn), sc2 = idWordScore(cand);
             if (sc2 > bestScore) { bestScore = sc2; bestN = rn; bestTxt = cand; }
           }
-          if (bestN) add("Mã Caesar (dịch " + bestN + " ký tự để giải)", 58, "dịch " + bestN + " · điểm " + bestScore, bestTxt, null, null);
-          else add("ROT13 / Caesar (khả năng thấp)", 28, "", rot13, null, null);
+          if (bestN) add("Caesar cipher (shift " + bestN + " to decode)", 58, "shift " + bestN + " · score " + bestScore, bestTxt, null, null);
+          else add("ROT13 / Caesar (low confidence)", 28, "", rot13, null, null);
         }
         var reversed = s.split("").reverse().join("");
         if (idWordScore(reversed) > origScore || /^\}/.test(reversed))
-          add("Chuỗi bị đảo ngược (reverse)", 60, /^\}/.test(reversed) ? "sau đảo bắt đầu bằng }" : "", reversed, null, null);
+          add("Reversed string", 60, /^\}/.test(reversed) ? "reversed text starts with }" : "", reversed, null, null);
       }
 
       /* ----- XOR đơn byte: chỉ gợi ý khi có manh mối ----- */
@@ -3509,16 +3516,16 @@ function sha512Bytes(msg){
           if (xr > bestRatio) { bestRatio = xr; bestKey = xk; bestBytes = xb; }
         }
         if (bestRatio > 0.95 && bestBytes && idWordScore(td.decode(bestBytes)) > 0)
-          add("XOR với khoá 1 byte (từ dữ liệu hex)", 64, "khoá 0x" + bestKey.toString(16).toUpperCase() + " (" + bestKey + ")", idBytesPreview(bestBytes), bestBytes, null);
+          add("Single-byte XOR (from hex data)", 64, "key 0x" + bestKey.toString(16).toUpperCase() + " (" + bestKey + ")", idBytesPreview(bestBytes), bestBytes, null);
       }
 
-      /* ----- Văn bản thường / không nhận ra ----- */
+      /* ----- Plain text / không nhận ra ----- */
       if (!results.length) {
         var plainRatio = idPrintableRatio(te.encode(s));
         if (/[^\x00-\x7F]/.test(s) || /\s/.test(s.trim()) && ent < 4.8)
-          add("Văn bản thường", 70, "", null, null, null);
+          add("Plain text", 70, "", null, null, null);
         else
-          add("Chưa nhận diện được", 35, "entropy " + ent.toFixed(2), null, null, null);
+          add("Unrecognized", 35, "entropy " + ent.toFixed(2), null, null, null);
       }
 
       results.sort(function (a, b) {
@@ -3527,7 +3534,7 @@ function sha512Bytes(msg){
         return am - bm;
       });
       elIdCount.textContent = results.length;
-      elIdStatus.textContent = "Cao nhất: " + results[0].name + " · " + results[0].conf + "%";
+      elIdStatus.textContent = "Top match: " + results[0].name + " · " + results[0].conf + "%";
       elIdStatus.className = "status ok";
       elIdEmpty.style.display = "none";
       elIdResultsWrap.style.display = "";
@@ -3542,10 +3549,10 @@ function sha512Bytes(msg){
         if (imgInfo) {
           imgUrl = URL.createObjectURL(new Blob([r.decodedBytes], { type: imgInfo.mime }));
           idImgUrls.push(imgUrl);
-          html += '<div class="img-preview-wrap"><span class="plabel">Ảnh đã giải · .' + escapeHtml(imgInfo.ext) + '</span><img class="img-preview id-result-img" src="' + imgUrl + '" alt="Ảnh giải mã được" onerror="this.style.display='none'" /><div class="img-meta id-img-meta"></div></div>';
+          html += '<div class="img-preview-wrap"><span class="plabel">Decoded image · .' + escapeHtml(imgInfo.ext) + '</span><img class="img-preview id-result-img" src="' + imgUrl + '" alt="Decoded image" onerror="this.style.display=\'none\'" /><div class="img-meta id-img-meta"></div></div>';
         }
         if (r.decodedText !== null && r.decodedText !== undefined && r.decodedText !== "")
-          html += '<div class="detect-preview"><span class="plabel">Giải mã thử</span>' + escapeHtml(r.decodedText) + "</div>";
+          html += '<div class="detect-preview"><span class="plabel">Decoded preview</span>' + escapeHtml(r.decodedText) + "</div>";
         else if (r.decodedBytes && !imgInfo)
           html += '<div class="detect-preview"><span class="plabel">Hex</span>' + escapeHtml(bytesToHex(r.decodedBytes).slice(0, 96)) + (r.decodedBytes.length > 48 ? " …" : "") + "</div>";
         item.innerHTML = html;
@@ -3560,12 +3567,12 @@ function sha512Bytes(msg){
         if (r.decodedText) {
           hasBtn = true;
           var cpBtn = document.createElement("button");
-          cpBtn.className = "btn small"; cpBtn.type = "button"; cpBtn.textContent = "Sao chép";
+          cpBtn.className = "btn small"; cpBtn.type = "button"; cpBtn.textContent = "Copy";
           (function (txt, b) { cpBtn.addEventListener("click", function () { copyText(txt, b); }); })(r.decodedText, cpBtn);
           btnRow.appendChild(cpBtn);
           if (r.decodedText.trim() !== s) {
             var reBtn = document.createElement("button");
-            reBtn.className = "btn small"; reBtn.type = "button"; reBtn.textContent = "Bóc lớp tiếp";
+            reBtn.className = "btn small"; reBtn.type = "button"; reBtn.textContent = "Peel next layer";
             (function (txt) { reBtn.addEventListener("click", function () { elIdInput.value = txt.trim(); analyzeInput(); elIdInput.scrollIntoView({ behavior: "smooth", block: "center" }); }); })(r.decodedText);
             btnRow.appendChild(reBtn);
           }
@@ -3573,7 +3580,7 @@ function sha512Bytes(msg){
         if (r.decodedBytes) {
           hasBtn = true;
           var dlBtn = document.createElement("button");
-          dlBtn.className = "btn small"; dlBtn.type = "button"; dlBtn.textContent = r.fileName ? "Tải file đã giải (" + r.fileName.slice(r.fileName.lastIndexOf(".")) + ")" : "Tải dữ liệu đã giải (.bin)";
+          dlBtn.className = "btn small"; dlBtn.type = "button"; dlBtn.textContent = r.fileName ? "Download decoded file (" + r.fileName.slice(r.fileName.lastIndexOf(".")) + ")" : "Download decoded data (.bin)";
           (function (bytes, fname) { dlBtn.addEventListener("click", function () {
             var blob = new Blob([bytes], { type: "application/octet-stream" });
             var a = document.createElement("a");
