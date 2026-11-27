@@ -187,7 +187,7 @@
       .badge.high{ color:#7fd6a8; border-color:#2c5240; background:#14231c; }
       .badge.mid{ color:#f5c86b; border-color:#5a4720; background:#241c0d; }
       .badge.low{ color:var(--muted); }
-      .detect-ev{ color:var(--muted); font-size:13.5px; margin:8px 0 0; }
+      .detect-ev{ color:var(--muted); font-size:12.5px; margin:8px 0 0; font-family:var(--mono); word-break:break-all; }
       .detect-ev .mono{ color:var(--text); font-size:12.5px; }
       .detect-preview{
         background:var(--panel-2); border:1px solid var(--line-soft); border-radius:8px;
@@ -195,6 +195,10 @@
         line-height:1.65; white-space:pre-wrap; word-break:break-all; max-height:220px; overflow:auto;
       }
       .detect-preview .plabel{ font-family:var(--sans); font-size:12px; color:var(--faint); text-transform:uppercase; letter-spacing:0.07em; display:block; margin-bottom:4px; }
+      .img-preview{ display:block; max-width:100%; max-height:420px; width:auto; height:auto; border:1px solid var(--line-soft); border-radius:8px; background:repeating-conic-gradient(#20242b 0% 25%, #171a1f 0% 50%) 0 0/16px 16px; margin-top:10px; }
+      .img-preview-wrap{ margin-top:10px; }
+      .img-preview-wrap .plabel{ font-size:12px; color:var(--faint); text-transform:uppercase; letter-spacing:0.07em; display:block; }
+      .img-meta{ font-size:12.5px; color:var(--muted); font-family:var(--mono); margin-top:6px; }
       .sample-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
 
       /* ---------- Hai cột cho luồng convert nhiều tầng ---------- */
@@ -427,6 +431,11 @@
         <input class="hidden-input" type="file" id="triage-file" />
 
         <div id="triage-result" style="display:none; margin-top:16px;">
+          <div class="card" id="tr-img-card" style="display:none;">
+            <h3>Ảnh</h3>
+            <img class="img-preview" id="tr-img" alt="Ảnh trong file" style="margin-top:0;" />
+            <div class="img-meta" id="tr-img-meta"></div>
+          </div>
           <div class="cols2">
             <div class="card">
               <h3>Thông tin tổng quan</h3>
@@ -600,6 +609,11 @@
                 <textarea class="mono" id="rsa-pt-text" rows="6" readonly spellcheck="false" placeholder="Flag / bản rõ sẽ hiện ở đây…"></textarea>
                 <button class="btn small" id="rsa-pt-copy" type="button">Sao chép</button>
               </div>
+              <div id="rsa-pt-img-wrap" style="display:none;">
+                <label class="flabel" style="margin-top:12px;">Bản rõ là ảnh</label>
+                <img class="img-preview" id="rsa-pt-img" alt="Bản rõ dạng ảnh" style="margin-top:0;" />
+                <div class="img-meta" id="rsa-pt-img-meta"></div>
+              </div>
               <label class="flabel" for="rsa-pt-hex" style="margin-top:12px;">Bản rõ dạng hex</label>
               <div class="outrow">
                 <input type="text" id="rsa-pt-hex" class="mono" readonly placeholder="—" />
@@ -624,6 +638,12 @@
           <div class="found" id="st-flag-box">
             <div style="font-size:13px; color:var(--muted);">Chuỗi giống flag tìm thấy trong ảnh:</div>
             <div class="key" id="st-flag-text"></div>
+          </div>
+
+          <div class="card" id="st-orig-card" style="display:none;">
+            <h3>Ảnh gốc</h3>
+            <img class="img-preview" id="st-orig-img" alt="Ảnh gốc" style="margin-top:0;" />
+            <div class="img-meta" id="st-orig-meta"></div>
           </div>
 
           <div class="cols2">
@@ -654,6 +674,8 @@
               <div class="btnrow">
                 <button class="btn small" id="st-appended-download" type="button" disabled>Tải phần dữ liệu nối thêm</button>
               </div>
+              <img class="img-preview" id="st-appended-img" alt="Ảnh trong phần dữ liệu nối thêm" style="display:none;" />
+              <div class="img-meta" id="st-appended-img-meta"></div>
               <label class="flabel" style="margin-top:12px;">Chuỗi in được trong phần nối thêm</label>
               <div class="strings-box" id="st-appended-strings" style="max-height:220px;">—</div>
             </div>
@@ -929,6 +951,21 @@
       for (var i = 0; i < out.length; i++) out[i] = parseInt(s.substr(i * 2, 2), 16);
       return out;
     }
+    var RENDERABLE_IMG_EXTS = { jpg: 1, jpeg: 1, png: 1, gif: 1, webp: 1, bmp: 1, ico: 1 };
+    function renderableImageInfo(bytes) {
+      if (!bytes || bytes.length < 4 || typeof idDetectFileType !== "function") return null;
+      var ft = null;
+      try { ft = idDetectFileType(bytes, 0); } catch (e) { return null; }
+      if (!ft) return null;
+      var ext = String(ft.ext || "").toLowerCase();
+      var mime = String(ft.mime || "").split(",")[0];
+      if (!RENDERABLE_IMG_EXTS[ext] || mime.indexOf("image/") !== 0) return null;
+      return { ext: ext, mime: mime, name: ft.name };
+    }
+    function fillImgMeta(imgEl, metaEl) {
+      function upd() { if (metaEl) metaEl.textContent = imgEl.naturalWidth + " × " + imgEl.naturalHeight + " px"; }
+      if (imgEl.complete && imgEl.naturalWidth) upd(); else imgEl.addEventListener("load", upd);
+    }
     function copyText(text, btn) {
       function done() {
         if (!btn) return;
@@ -1130,7 +1167,7 @@
       if (syncing) return;
       var r = rebuildTokenFromJson(undefined);
       if (r) {
-        elJwtAction.textContent = "Đã cập nhật token theo JSON (chữ ký giữ nguyên đoạn hiện tại).";
+        elJwtAction.textContent = "Đã cập nhật token.";
         elJwtAction.className = "status dim";
         hideBadge();
       }
@@ -1162,7 +1199,7 @@
       elToken.value = signingInput + "." + sigSeg;
       elSig.value = sigSeg;
       syncing = false;
-      elJwtAction.textContent = "Đã ký lại HS256 bằng khóa đã nhập (dài " + getSecretBytes().length + " byte).";
+      elJwtAction.textContent = "Đã ký HS256 · khóa " + getSecretBytes().length + " byte";
       elJwtAction.className = "status ok";
       hideBadge();
     });
@@ -1186,12 +1223,12 @@
 
     document.getElementById("jwt-keepsig").addEventListener("click", function () {
       if (!origSig) {
-        elJwtAction.textContent = "Chưa có chữ ký gốc nào được ghi lại — hãy dán token gốc trước.";
+        elJwtAction.textContent = "Chưa có chữ ký gốc.";
         elJwtAction.className = "status err"; return;
       }
       var r = rebuildTokenFromJson(origSig);
       if (r) {
-        elJwtAction.textContent = "Đã ghép header/payload hiện tại với chữ ký gốc không đổi.";
+        elJwtAction.textContent = "Đã ghép chữ ký gốc.";
         elJwtAction.className = "status ok"; hideBadge();
       }
     });
@@ -1376,18 +1413,18 @@ function sha512Bytes(msg){
         elCrackHashStatus.className = "status dim"; return;
       }
       if (!/^[0-9a-f]+$/.test(h)) {
-        elCrackHashStatus.textContent = "Hash chứa ký tự không phải hex — kiểm tra lại dữ kiện đã dán.";
+        elCrackHashStatus.textContent = "Không phải hex.";
         elCrackHashStatus.className = "status err"; return;
       }
       var a = detectAlgo();
       if (a) {
-        elCrackHashStatus.textContent = "Hash dài " + h.length + " ký tự hex → thuật toán đang dùng: " + ALGO_LABEL[a] + ".";
+        elCrackHashStatus.textContent = h.length + " hex → " + ALGO_LABEL[a];
         elCrackHashStatus.className = "status ok";
       } else if (h.length === 32) {
-        elCrackHashStatus.textContent = "Hash dài 32 ký tự hex: có thể là MD5 hoặc NTLM — hai loại này trùng độ dài, hãy chọn tay ở ô Thuật toán.";
+        elCrackHashStatus.textContent = "32 hex: MD5 hoặc NTLM — chọn tay.";
         elCrackHashStatus.className = "status err";
       } else {
-        elCrackHashStatus.textContent = "Hash dài " + h.length + " ký tự hex — không khớp độ dài của MD5/NTLM (32), SHA-1 (40), SHA-256 (64) hay SHA-512 (128).";
+        elCrackHashStatus.textContent = "Dài " + h.length + " hex — cần 32/40/64/128.";
         elCrackHashStatus.className = "status err";
       }
     }
@@ -1438,7 +1475,7 @@ function sha512Bytes(msg){
     elFoundUse.addEventListener("click", function () {
       document.getElementById("jwt-secret").value = elFoundKey.textContent;
       document.querySelector('[data-tab="jwt"]').click();
-      elJwtAction.textContent = "Đã điền khóa vừa dò được vào ô secret — bấm “Ký lại HS256” để ký token mới.";
+      elJwtAction.textContent = "Đã điền khóa vào JWT Workbench.";
       elJwtAction.className = "status ok";
     });
 
@@ -1461,7 +1498,7 @@ function sha512Bytes(msg){
           elCrackTokStatus.className = "status err"; return;
         }
         if (String(header.alg || "").toUpperCase() !== "HS256") {
-          elCrackTokStatus.textContent = "Token này có alg = " + (header.alg || "?") + " — chế độ JWT chỉ áp dụng cho HS256. Các thuật toán khác hãy dùng hashcat thật.";
+          elCrackTokStatus.textContent = "alg = " + (header.alg || "?") + " — chỉ HS256.";
           elCrackTokStatus.className = "status err"; return;
         }
         var targetSig;
@@ -1483,7 +1520,7 @@ function sha512Bytes(msg){
         }
         if (!algo) { updateHashStatus(); return; }
         if (target.length !== ALGO_HEXLEN[algo]) {
-          elCrackHashStatus.textContent = "Hash dài " + target.length + " ký tự hex nhưng " + ALGO_LABEL[algo] + " cần " + ALGO_HEXLEN[algo] + " — kiểm tra lại thuật toán đã chọn.";
+          elCrackHashStatus.textContent = target.length + " hex ≠ " + ALGO_LABEL[algo] + " (" + ALGO_HEXLEN[algo] + ")";
           elCrackHashStatus.className = "status err"; return;
         }
         testFn = function (cand) { return rawHashHex(algo, cand) === target; };
@@ -1492,7 +1529,7 @@ function sha512Bytes(msg){
       }
 
       if (!keys.length) {
-        elCrackWlStatus.textContent = "Hãy nạp file wordlist hoặc dán danh sách ứng viên trước.";
+        elCrackWlStatus.textContent = "Chưa có wordlist.";
         elCrackWlStatus.className = "status err"; return;
       }
       elFound.classList.remove("show");
@@ -1530,7 +1567,7 @@ function sha512Bytes(msg){
         if (idx < keys.length) setTimeout(step, 0);
         else {
           cracking = false;
-          elProgressText.textContent = "Đã thử hết " + keys.length.toLocaleString("vi-VN") + " ứng viên — không ứng viên nào khớp. Mật khẩu thật không nằm trong danh sách này.";
+          elProgressText.textContent = "Hết " + keys.length.toLocaleString("vi-VN") + " ứng viên — không khớp.";
           elProgressText.className = "status err";
           btnStart.disabled = false; btnStop.disabled = true;
         }
@@ -1628,6 +1665,21 @@ function sha512Bytes(msg){
         var hexParts = [];
         for (var i = 0; i < head.length; i++) hexParts.push(("0" + head[i].toString(16)).slice(-2).toUpperCase());
         document.getElementById("tr-head").textContent = hexParts.join(" ") || "(file rỗng)";
+        var trImgInfo = renderableImageInfo(bytes) || (file.type && file.type.indexOf("image/") === 0 ? { mime: file.type, ext: (file.name.split(".").pop() || "").toLowerCase() } : null);
+        var trCard = document.getElementById("tr-img-card");
+        var trImg = document.getElementById("tr-img");
+        if (window.__trImgUrl) URL.revokeObjectURL(window.__trImgUrl);
+        if (trImgInfo) {
+          window.__trImgUrl = URL.createObjectURL(new Blob([bytes], { type: trImgInfo.mime }));
+          trImg.onerror = function () { trCard.style.display = "none"; };
+          trImg.src = window.__trImgUrl;
+          document.getElementById("tr-img-meta").textContent = "";
+          fillImgMeta(trImg, document.getElementById("tr-img-meta"));
+          trCard.style.display = "";
+        } else {
+          trImg.removeAttribute("src");
+          trCard.style.display = "none";
+        }
         document.getElementById("tr-sha").textContent = "đang tính…";
         if (window.crypto && crypto.subtle) {
           crypto.subtle.digest("SHA-256", bytes).then(function (hash) {
@@ -1678,7 +1730,7 @@ function sha512Bytes(msg){
         b64In.value = td.decode(b64ToBytes(raw, b64Mode.value === "url"));
         b64Status.textContent = ""; b64Status.className = "status dim";
       } catch (e) {
-        b64Status.textContent = "Đang gõ dở hoặc chưa phải " + (b64Mode.value === "url" ? "Base64URL" : "Base64") + " hoàn chỉnh — cứ gõ tiếp, hợp lệ là ô văn bản tự cập nhật.";
+        b64Status.textContent = "Chưa phải " + (b64Mode.value === "url" ? "Base64URL" : "Base64") + " hoàn chỉnh.";
         b64Status.className = "status dim";
       }
       b64Sync = false;
@@ -1700,14 +1752,14 @@ function sha512Bytes(msg){
       var raw = hexOut.value.replace(/0x/gi, "").replace(/[^0-9a-fA-F]/g, "");
       if (!raw) { hexIn.value = ""; hexStatus.textContent = ""; hexSync = false; return; }
       if (raw.length % 2) {
-        hexStatus.textContent = "Dãy hex đang có số ký tự lẻ — gõ thêm một ký tự nữa là ô văn bản tự cập nhật.";
+        hexStatus.textContent = "Hex lẻ ký tự.";
         hexStatus.className = "status dim"; hexSync = false; return;
       }
       try {
         hexIn.value = td.decode(hexToBytes(raw));
         hexStatus.textContent = ""; hexStatus.className = "status dim";
       } catch (e) {
-        hexStatus.textContent = "Chưa giải mã được dãy hex này — cứ kiểm tra lại khi gõ xong.";
+        hexStatus.textContent = "Hex chưa hợp lệ.";
         hexStatus.className = "status dim";
       }
       hexSync = false;
@@ -1885,13 +1937,12 @@ function sha512Bytes(msg){
       rsaKeyObj = null;
       var t = elRsaKey.value.trim();
       if (!t) {
-        elRsaKeyStatus.textContent = "Chưa có khoá — dán khoá vào là trang tự nhận diện độ dài và thành phần.";
+        elRsaKeyStatus.textContent = "Chưa có khoá.";
         elRsaKeyStatus.className = "status dim"; return;
       }
       try {
         rsaKeyObj = parseRsaPrivateKey(t);
-        elRsaKeyStatus.textContent = "Đã nạp khoá RSA " + rsaKeyObj.bits + "-bit · e = " + rsaKeyObj.e.toString() +
-          " · có d (private exponent) ✓ — sẵn sàng giải mã. Block bản mã phải dài đúng " + rsaKeyObj.k + " byte (hoặc bội số của nó).";
+        elRsaKeyStatus.textContent = "RSA " + rsaKeyObj.bits + "-bit · e = " + rsaKeyObj.e.toString() + " · block " + rsaKeyObj.k + " byte";
         elRsaKeyStatus.className = "status ok";
       } catch (e) {
         elRsaKeyStatus.textContent = "Chưa đọc được khoá: " + e.message;
@@ -1978,7 +2029,18 @@ function sha512Bytes(msg){
           document.getElementById("rsa-pt-text").value = td.decode(rsaPlain);
           document.getElementById("rsa-pt-hex").value = bytesToHex(rsaPlain);
           document.getElementById("rsa-download").disabled = false;
-          elRsaStatus.textContent = "Giải mã xong — bản rõ dài " + rsaPlain.length.toLocaleString("vi-VN") + " byte. Nếu bản rõ trông như rác thì khả năng cao là sai padding hoặc sai hàm băm OAEP, hãy thử lựa chọn khác.";
+          var rsaImgInfo = renderableImageInfo(rsaPlain);
+          var rsaImgWrap = document.getElementById("rsa-pt-img-wrap");
+          var rsaImg = document.getElementById("rsa-pt-img");
+          if (window.__rsaImgUrl) URL.revokeObjectURL(window.__rsaImgUrl);
+          if (rsaImgInfo) {
+            window.__rsaImgUrl = URL.createObjectURL(new Blob([rsaPlain], { type: rsaImgInfo.mime }));
+            rsaImg.onerror = function () { rsaImgWrap.style.display = "none"; };
+            rsaImg.src = window.__rsaImgUrl;
+            fillImgMeta(rsaImg, document.getElementById("rsa-pt-img-meta"));
+            rsaImgWrap.style.display = "";
+          } else { rsaImg.removeAttribute("src"); rsaImgWrap.style.display = "none"; }
+          elRsaStatus.textContent = "Xong · " + rsaPlain.length.toLocaleString("vi-VN") + " byte";
           elRsaStatus.className = "status ok";
         } catch (e) {
           elRsaStatus.textContent = e.message;
@@ -2287,7 +2349,7 @@ function sha512Bytes(msg){
     function renderMetaRows(rows) {
       var dl = document.getElementById("st-meta-list");
       if (!rows.length) {
-        dl.innerHTML = "<dt>Metadata</dt><dd>Không đọc được metadata nào từ file này.</dd>";
+        dl.innerHTML = "<dt>Metadata</dt><dd>—</dd>";
         return;
       }
       var MAXR = 300;
@@ -2321,6 +2383,13 @@ function sha512Bytes(msg){
         stBytes = new Uint8Array(reader.result);
         stCanvas = null; stAppended = null;
         document.getElementById("stego-result").style.display = "";
+        var stOrigCard = document.getElementById("st-orig-card");
+        var stOrigImg = document.getElementById("st-orig-img");
+        if (window.__stOrigUrl) URL.revokeObjectURL(window.__stOrigUrl);
+        window.__stOrigUrl = URL.createObjectURL(new Blob([stBytes], { type: file.type || "application/octet-stream" }));
+        stOrigImg.onerror = function () { stOrigCard.style.display = "none"; };
+        stOrigImg.onload = function () { stOrigCard.style.display = ""; document.getElementById("st-orig-meta").textContent = stOrigImg.naturalWidth + " × " + stOrigImg.naturalHeight + " px"; };
+        stOrigImg.src = window.__stOrigUrl;
         document.getElementById("st-flag-box").classList.remove("show");
         var fmt = detectImageFormat(stBytes);
         document.getElementById("st-name").textContent = file.name;
@@ -2392,31 +2461,43 @@ function sha512Bytes(msg){
           }
           metaDone = Promise.resolve();
         } else {
-          metaRows.push(["Metadata", "Định dạng không rõ — chỉ trích strings và kiểm tra cơ bản."]);
+          metaRows.push(["Metadata", "Định dạng không rõ."]);
           metaDone = Promise.resolve();
         }
 
         metaDone.then(function () {
           renderMetaRows(metaRows);
+          var apImgReset = document.getElementById("st-appended-img");
+          apImgReset.removeAttribute("src"); apImgReset.style.display = "none";
+          document.getElementById("st-appended-img-meta").textContent = "";
           // Dữ liệu nối thêm sau điểm kết thúc
           var info = document.getElementById("st-appended-info");
           var dlBtn = document.getElementById("st-appended-download");
           var apStrings = document.getElementById("st-appended-strings");
           if (end > 0 && stBytes.length > end) {
             stAppended = stBytes.subarray(end);
-            info.textContent = "Phát hiện " + stAppended.length.toLocaleString("vi-VN") + " byte nằm sau " + endLabel +
-              " (offset " + end.toLocaleString("vi-VN") + " → hết file). 32 byte đầu: " + headHexSpaced(stAppended, 32);
+            info.textContent = "+" + stAppended.length.toLocaleString("vi-VN") + " byte sau " + endLabel + " · offset " + end.toLocaleString("vi-VN") + " · hex: " + headHexSpaced(stAppended, 16);
             info.className = "status ok";
             dlBtn.disabled = false;
+            var apImgInfo = renderableImageInfo(stAppended);
+            var apImg = document.getElementById("st-appended-img");
+            if (window.__stApUrl) URL.revokeObjectURL(window.__stApUrl);
+            if (apImgInfo) {
+              window.__stApUrl = URL.createObjectURL(new Blob([stAppended], { type: apImgInfo.mime }));
+              apImg.onerror = function () { apImg.style.display = "none"; };
+              apImg.src = window.__stApUrl;
+              apImg.style.display = "";
+              fillImgMeta(apImg, document.getElementById("st-appended-img-meta"));
+            }
             var as = extractStrings(stAppended, 4);
             apStrings.textContent = as.slice(0, 500).join("\n") || "(phần nối thêm không có chuỗi in được nào)";
           } else if (end > 0) {
-            info.textContent = "File kết thúc đúng tại " + endLabel + " (offset " + end.toLocaleString("vi-VN") + ") — không có dữ liệu nối thêm.";
+            info.textContent = endLabel + " @ " + end.toLocaleString("vi-VN") + " · nối thêm: 0 byte";
             info.className = "status dim";
             dlBtn.disabled = true;
             apStrings.textContent = "—";
           } else {
-            info.textContent = "Không xác định được điểm kết thúc hợp lệ của ảnh này (file có thể bị cắt ngắn hoặc cấu trúc lạ) — chưa kết luận được về dữ liệu nối thêm.";
+            info.textContent = "Không rõ điểm kết thúc.";
             info.className = "status err";
             dlBtn.disabled = true;
             apStrings.textContent = "—";
@@ -2437,9 +2518,9 @@ function sha512Bytes(msg){
           scanFlagInStego();
         }).catch(function (e) {
           document.getElementById("st-dims").textContent = "(không giải mã được điểm ảnh)";
-          document.getElementById("st-planes-status").textContent = e.message + " Strings, metadata và kiểm tra dữ liệu nối thêm ở trên vẫn dùng được.";
+          document.getElementById("st-planes-status").textContent = e.message;
           document.getElementById("st-planes-status").className = "status err";
-          document.getElementById("st-lsb-status").textContent = "Không trích LSB được vì không giải mã được điểm ảnh.";
+          document.getElementById("st-lsb-status").textContent = "Không trích được LSB.";
           document.getElementById("st-lsb-status").className = "status err";
         });
       };
@@ -2481,7 +2562,7 @@ function sha512Bytes(msg){
         }
       }
       var st = document.getElementById("st-planes-status");
-      st.textContent = scale < 1 ? ("Ảnh lớn nên các lớp bit đang hiển thị ở bản thu nhỏ " + sw + " × " + sh + " px; phần trích LSB bên dưới vẫn chạy trên ảnh gốc.") : "";
+      st.textContent = scale < 1 ? (sw + " × " + sh + " px (thu nhỏ)") : "";
       st.className = "status dim";
     }
 
@@ -2521,9 +2602,9 @@ function sha512Bytes(msg){
       }
       var ratio = sample.length ? printable / sample.length : 0;
       var chanNames = chans.map(function (c) { return "RGBA"[c]; }).join("");
-      status.textContent = "Đã trích " + out.length.toLocaleString("vi-VN") + " byte từ kênh " + chanNames + ", bit " + bit +
-        (nul > 0 ? " · gặp byte 0x00 tại vị trí " + nul.toLocaleString("vi-VN") + " nên phần văn bản đã cắt tại đó (dấu hiệu dữ liệu giấu kết thúc bằng 0x00)" : "") +
-        (ratio > 0.9 ? " · phần đầu đọc được như văn bản — nhiều khả năng đúng cấu hình." : " · phần đầu không giống văn bản — nếu chắc chắn ảnh có giấu dữ liệu, thử đổi kênh, bit hoặc thứ tự ghép bit.");
+      status.textContent = out.length.toLocaleString("vi-VN") + " byte · kênh " + chanNames + " · bit " + bit +
+        (nul > 0 ? " · 0x00 @ " + nul.toLocaleString("vi-VN") : "") +
+        (ratio > 0.9 ? " · giống văn bản" : " · không giống văn bản");
       status.className = "status " + (ratio > 0.9 ? "ok" : "dim");
       var lsbStrings = extractStrings(out, 4);
       stringsEl.textContent = lsbStrings.slice(0, 500).join("\n") + (lsbStrings.length > 500 ? "\n… (chỉ hiện 500 chuỗi đầu)" : "") || "(không có chuỗi in được nào trong dòng LSB)";
@@ -2687,11 +2768,11 @@ function sha512Bytes(msg){
       document.getElementById("cupp-download").disabled = !has;
       document.getElementById("cupp-copy").disabled = !has;
       document.getElementById("cupp-tocrack").disabled = !has;
-      var msg = "Đã tạo " + kept.length.toLocaleString("vi-VN") + " từ" + sourceNote +
-        " · trước khử trùng lặp: " + before.toLocaleString("vi-VN") + " tổ hợp" +
-        (cfg.leetOn ? " · đã cộng biến thể leet" : "") +
-        (cfg.lenOn ? " · lọc độ dài đã loại " + (all.length - kept.length).toLocaleString("vi-VN") + " từ (giữ từ dài " + (cfg.wcfrom + 1) + "–" + (cfg.wcto - 1) + " ký tự)" : " · không lọc độ dài (" + all.length.toLocaleString("vi-VN") + " từ sau khử trùng lặp)");
-      if (!has) msg += " — danh sách rỗng: hãy nới khoảng lọc độ dài hoặc bỏ chọn lọc độ dài, vì mặc định của cupp.cfg chỉ giữ từ 6–11 ký tự.";
+      var msg = kept.length.toLocaleString("vi-VN") + " từ" + sourceNote +
+        " · trước khử trùng: " + before.toLocaleString("vi-VN") +
+        (cfg.leetOn ? " · +leet" : "") +
+        (cfg.lenOn ? " · lọc " + (cfg.wcfrom + 1) + "–" + (cfg.wcto - 1) + " ký tự: −" + (all.length - kept.length).toLocaleString("vi-VN") : "");
+      if (!has) msg += " · rỗng — nới lọc độ dài.";
       elCuppStatus.textContent = msg;
       elCuppStatus.className = "status " + (has ? "ok" : "err");
     }
@@ -2702,7 +2783,7 @@ function sha512Bytes(msg){
 
     function cuppGenerateProfile(cfg) {
       var name = cuppField("cupp-name");
-      if (!name) { cuppError("Bản gốc bắt buộc phải có ít nhất Tên của người chính — hãy điền ô Tên trước."); return; }
+      if (!name) { cuppError("Thiếu Tên."); return; }
       var surname = cuppField("cupp-surname"), nick = cuppField("cupp-nick");
       var wife = cuppField("cupp-wife"), wifen = cuppField("cupp-wifen");
       var kid = cuppField("cupp-kid"), kidn = cuppField("cupp-kidn");
@@ -2711,7 +2792,7 @@ function sha512Bytes(msg){
       var pairs = [[birth, "Ngày sinh người chính"], [wifeb, "Ngày sinh bạn đời"], [kidb, "Ngày sinh của con"]];
       for (var pi = 0; pi < pairs.length; pi++) {
         if (pairs[pi][0] && pairs[pi][0].length !== 8) {
-          cuppError(pairs[pi][1] + " phải gồm đúng 8 chữ số dạng DDMMYYYY (đang có " + pairs[pi][0].length + " chữ số) — sửa lại hoặc để trống.");
+          cuppError(pairs[pi][1] + ": cần 8 chữ số DDMMYYYY (đang " + pairs[pi][0].length + ").");
           return;
         }
       }
@@ -2792,12 +2873,12 @@ function sha512Bytes(msg){
 
     function cuppGenerateImprove(cfg) {
       var words = cuppImpWords();
-      if (!words.length) { cuppError("Hãy dán hoặc nạp wordlist gốc trước — chưa có từ nào để nâng cấp."); return; }
+      if (!words.length) { cuppError("Chưa có từ gốc."); return; }
       var concatOn = document.getElementById("cupp-imp-concat").checked;
       var contPairs = [];
       if (concatOn) {
         if (words.length * (words.length - 1) > 2000000) {
-          cuppError("Ghép đôi " + words.length.toLocaleString("vi-VN") + " từ sẽ sinh hơn 2 triệu tổ hợp ngay ở bước ghép — bản gốc cũng cảnh báo việc này (threshold 200 trong cupp.cfg). Hãy rút gọn danh sách gốc hoặc bỏ chọn ghép đôi.");
+          cuppError("Ghép đôi " + words.length.toLocaleString("vi-VN") + " từ: >2 triệu tổ hợp — rút gọn hoặc bỏ ghép đôi.");
           return;
         }
         for (var i = 0; i < words.length; i++)
@@ -2857,7 +2938,7 @@ function sha512Bytes(msg){
       elCrackWl.value = cuppResult.join("\n");
       updateWlStatus();
       document.querySelector('[data-tab="crack"]').click();
-      elCrackWlStatus.textContent = "Đã nạp " + cuppResult.length.toLocaleString("vi-VN") + " ứng viên từ tab CUPP — chọn hash/token đích rồi bấm “Bắt đầu dò”.";
+      elCrackWlStatus.textContent = "Đã nạp " + cuppResult.length.toLocaleString("vi-VN") + " ứng viên từ CUPP.";
       elCrackWlStatus.className = "status ok";
     });
 
@@ -2875,6 +2956,7 @@ function sha512Bytes(msg){
     var elIdEmpty = document.getElementById("id-empty");
     var elIdResults = document.getElementById("id-results");
     var elIdCount = document.getElementById("id-count");
+    var idImgUrls = [];
 
     var ID_SAMPLES = {
       b64: "ZmxhZ3tiYXNlNjRfaXNfbm90X2VuY3J5cHRpb259",
@@ -2918,7 +3000,7 @@ function sha512Bytes(msg){
     function idBytesPreview(bytes, maxChars) {
       var text = td.decode(bytes);
       var clean = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "·");
-      var lim = maxChars || 600;
+      var lim = maxChars || 300;
       return clean.length > lim ? clean.slice(0, lim) + " …(còn " + (clean.length - lim) + " ký tự)" : clean;
     }
     /* ============================================================
@@ -3229,12 +3311,10 @@ function sha512Bytes(msg){
       var name, evidence;
       if (m.ft) {
         name = chainLabel + " → file " + m.ft.name + " (." + m.ft.ext + ")";
-        evidence = "Các byte đầu của dữ liệu đã giải khớp chữ ký (magic bytes) của " + escapeHtml(m.ft.name) + " — đuôi ." + escapeHtml(m.ft.ext) + ", MIME " + escapeHtml(m.ft.mime) + ". Tải về bằng nút bên dưới với đúng đuôi file để mở xem.";
+        evidence = "." + m.ft.ext + " · " + m.ft.mime + " · " + bytes.length.toLocaleString("vi-VN") + " byte · hex: " + bytesToHex(bytes.subarray(0, 12));
       } else {
         name = (chainLabel.indexOf("→") >= 0 ? "Mã hoá lồng nhau: " : "Mã hoá ") + chainLabel;
-        evidence = "Mẫu input khớp tiêu chí nhận diện của phép này trong CyberChef Magic. Đầu ra " +
-          (isText ? "là văn bản UTF-8 đọc được" + (m.lang.prob > 0 ? ", tần suất byte khớp hồ sơ " + (ID_LANG_NAMES[m.lang.lang] || m.lang.lang) + " (χ² ≈ " + Math.round(m.lang.score) + ")" : "") : (m.utf8 ? "là UTF-8 hợp lệ nhưng chưa giống văn bản thường" : "chưa phải văn bản")) +
-          ", entropy " + m.ent.toFixed(2) + " bit/byte, điểm Magic " + (m.score === Infinity ? "∞" : Math.round(m.score).toLocaleString("vi-VN")) + " (càng thấp càng đáng tin).";
+        evidence = (m.utf8 ? "UTF-8" : "không UTF-8") + " · χ² " + (m.lang.score === Infinity ? "∞" : Math.round(m.lang.score).toLocaleString("vi-VN")) + (m.lang.prob > 0 ? " · " + (ID_LANG_NAMES[m.lang.lang] || m.lang.lang) : "") + " · entropy " + m.ent.toFixed(2) + " · điểm " + (m.score === Infinity ? "∞" : Math.round(m.score).toLocaleString("vi-VN"));
       }
       add(name, idBranchConf(m), evidence, isText ? idBytesPreview(bytes) : null, bytes, null,
         { mScore: m.score, fileName: m.ft ? "decoded." + m.ft.ext : null });
@@ -3242,8 +3322,8 @@ function sha512Bytes(msg){
     function idRunMagicEngine(s, add) {
       // Bản thân input (dạng byte UTF-8) có khớp chữ ký file nào không
       var selfFt = idDetectFileType(te.encode(s), 4, true);
-      if (selfFt) add("Bản thân dữ liệu khớp chữ ký file " + selfFt.name + " (." + selfFt.ext + ")", 90,
-        "Ngay ở dạng thô, các byte đầu của input đã khớp chữ ký (magic bytes) của " + escapeHtml(selfFt.name) + " — MIME " + escapeHtml(selfFt.mime) + ". Có thể đây là nội dung file bị dán vào dưới dạng chữ.", null, te.encode(s), null, { mScore: 0, fileName: "input." + selfFt.ext });
+      if (selfFt) add("File " + selfFt.name + " (." + selfFt.ext + ")", 90,
+        "." + selfFt.ext + " · " + selfFt.mime, null, te.encode(s), null, { mScore: 0, fileName: "input." + selfFt.ext });
       var seen = {};
       function runPass(str, isCompact) {
         idMatchingCriteria(str, null).filter(function (crit) { return !isCompact || crit.compactOk; }).forEach(function (crit) {
@@ -3282,6 +3362,8 @@ function sha512Bytes(msg){
     function analyzeInput() {
       var raw = elIdInput.value;
       var s = raw.trim();
+      idImgUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+      idImgUrls = [];
       elIdResults.innerHTML = "";
       if (!s) {
         elIdStatus.textContent = "Chưa có input.";
@@ -3315,9 +3397,9 @@ function sha512Bytes(msg){
       charsetNote = kinds.join(" · ");
       var statRows = [
         ["Độ dài", compact.length.toLocaleString("vi-VN") + " ký tự" + (raw.length !== compact.length ? " (" + raw.length + " ký tự gồm khoảng trắng/xuống dòng)" : ""), s.split(/\r?\n/).length + " dòng"],
-        ["Entropy Shannon", ent.toFixed(2) + " bit/ký tự", ent > 5.5 ? "Cao — giống dữ liệu đã nén/mã hoá hoặc Base64 dày đặc" : (ent > 4 ? "Trung bình — giống mã hoá dạng chữ (Base64/Hex) hoặc văn bản nén" : "Thấp — giống văn bản thường hoặc mã đơn giản (Morse, ROT…)")],
-        ["Thành phần ký tự", charsetNote, compact.length && nHexCh === compact.length ? "Toàn bộ ký tự đều thuộc bảng hex (0-9a-f)" : ""],
-        ["Byte khi đọc dạng UTF-8", te.encode(s).length.toLocaleString("vi-VN") + " byte", /[^\x00-\x7F]/.test(s) ? "Có ký tự ngoài ASCII (tiếng Việt / Unicode)" : "Thuần ASCII"]
+        ["Entropy Shannon", ent.toFixed(2) + " bit/ký tự", ""],
+        ["Thành phần ký tự", charsetNote, compact.length && nHexCh === compact.length ? "toàn hex (0-9a-f)" : ""],
+        ["Byte khi đọc dạng UTF-8", te.encode(s).length.toLocaleString("vi-VN") + " byte", /[^\x00-\x7F]/.test(s) ? "ngoài ASCII" : "ASCII"]
       ];
       elIdStats.innerHTML = statRows.map(function (r) {
         return '<div class="claim"><div class="k">' + escapeHtml(r[0]) + '</div><div class="v" style="font-family:var(--sans); font-size:14px;">' + escapeHtml(r[1]) + '</div>' + (r[2] ? '<div class="sub">' + escapeHtml(r[2]) + '</div>' : "") + "</div>";
@@ -3326,7 +3408,7 @@ function sha512Bytes(msg){
 
       /* ----- PEM ----- */
       var pemM = s.match(/-----BEGIN ([A-Z0-9 ]+)-----/);
-      if (pemM) add("Khối PEM — " + pemM[1].trim(), 99, "Có dòng mở đầu <span class='mono'>-----BEGIN " + escapeHtml(pemM[1].trim()) + "-----</span>: đây là định dạng bọc Base64 chuẩn cho khoá/chứng chỉ. Phần thân giữa hai dòng BEGIN/END chính là Base64 của dữ liệu DER.", null, null,
+      if (pemM) add("Khối PEM — " + pemM[1].trim(), 99, "-----BEGIN " + pemM[1].trim() + "-----", null, null,
         /PRIVATE KEY/.test(pemM[1]) ? { label: "Đưa sang tab Giải mã RSA", tab: "rsa", rsaKey: true } : null);
 
       /* ----- JWT ----- */
@@ -3336,7 +3418,7 @@ function sha512Bytes(msg){
           var jHeader = JSON.parse(td.decode(b64ToBytes(jwtParts[0], true)));
           var jPayloadTxt = td.decode(b64ToBytes(jwtParts[1], true));
           var jPayload = JSON.parse(jPayloadTxt);
-          add("JWT (JSON Web Token)", 98, "Đúng 3 đoạn Base64URL ngăn bằng dấu chấm; đoạn 1 giải ra JSON header có <span class='mono'>alg = " + escapeHtml(String(jHeader.alg || "?")) + "</span>" + (jHeader.typ ? ", <span class='mono'>typ = " + escapeHtml(String(jHeader.typ)) + "</span>" : "") + ". Đoạn 3 là chữ ký" + (jwtParts[2] ? " (" + jwtParts[2].length + " ký tự)." : " rỗng — dấu hiệu alg=none."),
+          add("JWT (JSON Web Token)", 98, "alg=" + String(jHeader.alg || "?") + (jHeader.typ ? " · typ=" + String(jHeader.typ) : "") + (jwtParts[2] ? " · sig " + jwtParts[2].length + " ký tự" : " · sig rỗng"),
             "Header: " + JSON.stringify(jHeader) + "\nPayload: " + JSON.stringify(jPayload), null,
             { label: "Mở trong JWT Workbench", tab: "jwt", jwt: true });
         } catch (e) { /* không phải JWT thật */ }
@@ -3344,26 +3426,26 @@ function sha512Bytes(msg){
 
       /* ----- Các định dạng hash có tiền tố ($) ----- */
       if (/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(compact))
-        add("Hash bcrypt", 97, "Tiền tố <span class='mono'>$2a$/$2b$/$2y$</span> + cost 2 chữ số + 53 ký tự bảng riêng của bcrypt — định dạng của thư viện bcrypt. Dò bằng hashcat mode 3200.", null, null, { label: "Lấy lệnh hashcat (mode 3200)", tab: "hashcat", hcMode: "3200" });
+        add("Hash bcrypt", 97, "$2$ · hashcat 3200", null, null, { label: "Lấy lệnh hashcat (mode 3200)", tab: "hashcat", hcMode: "3200" });
       else if (/^\$argon2(id|i|d)\$/.test(compact))
-        add("Hash Argon2", 97, "Tiền tố <span class='mono'>$argon2i$/$argon2d$/$argon2id$</span> — định dạng chuẩn của Argon2 (hàm băm mật khẩu hiện đại, có muối và tham số bộ nhớ kèm theo trong chuỗi).", null, null, null);
+        add("Hash Argon2", 97, "$argon2$", null, null, null);
       else if (/^\$(1|5|6|y)\$/.test(compact)) {
         var cryptName = { "1": "md5crypt — hashcat mode 500", "5": "sha256crypt — hashcat mode 7400", "6": "sha512crypt — hashcat mode 1800", "y": "yescrypt" }[compact[1]];
-        add("Hash Unix crypt (" + cryptName + ")", 95, "Tiền tố <span class='mono'>$" + compact[1] + "$</span> là dấu hiệu của định dạng mật khẩu trong <span class='mono'>/etc/shadow</span> trên Linux: $" + escapeHtml(compact[1]) + "$ tương ứng " + cryptName + ".", null, null, null);
+        add("Hash Unix crypt (" + cryptName + ")", 95, "$" + compact[1] + "$ · " + cryptName, null, null, null);
       }
       if (/^[a-f0-9]{32}:[a-f0-9]{32}$/i.test(compact))
-        add("Cặp NTLM dạng LM:NT hoặc hash:muối", 70, "Hai vế hex 32 ký tự ngăn bằng dấu hai chấm — mẫu quen thuộc trong dump mật khẩu Windows (LM hash : NT hash) hoặc định dạng hash:muối.", null, null, { label: "Đưa vế sau sang Dò hash (NTLM)", tab: "crack", crackHash: compact.split(":")[1], crackAlgo: "ntlm" });
+        add("Cặp NTLM dạng LM:NT hoặc hash:muối", 70, "hex32 : hex32", null, null, { label: "Đưa vế sau sang Dò hash (NTLM)", tab: "crack", crackHash: compact.split(":")[1], crackAlgo: "ntlm" });
 
       /* ----- Hex / hash hex ----- */
       var isHex = /^[0-9a-fA-F]+$/.test(compact) && compact.length >= 2 && compact.length % 2 === 0;
       if (isHex) {
         var hexBytes = null;
         try { hexBytes = hexToBytes(compact); } catch (e) {}
-        var hashByLen = { 8: "CRC-32 / Adler-32 (checksum, không phải hash mật khẩu)", 32: "MD5 hoặc NTLM — hai loại trùng độ dài, phải chọn tay khi dò", 40: "SHA-1 (cũng có thể là RIPEMD-160)", 56: "SHA-224", 64: "SHA-256", 96: "SHA-384", 128: "SHA-512" };
+        var hashByLen = { 8: "CRC-32 / Adler-32", 32: "MD5 hoặc NTLM", 40: "SHA-1 / RIPEMD-160", 56: "SHA-224", 64: "SHA-256", 96: "SHA-384", 128: "SHA-512" };
         if (hashByLen[compact.length]) {
           var isHashLen = [32, 40, 56, 64, 96, 128].indexOf(compact.length) >= 0;
           add(isHashLen ? "Hash dạng hex — " + hashByLen[compact.length].split(" — ")[0] : "Checksum dạng hex — " + hashByLen[compact.length], isHashLen ? 82 : 65,
-            "Toàn bộ " + compact.length + " ký tự đều là hex và độ dài này khớp chính xác độ dài đầu ra của " + escapeHtml(hashByLen[compact.length]) + ". Hash là hàm một chiều: không “giải mã” ngược được, chỉ dò bằng wordlist/hashcat.",
+            compact.length + " hex",
             null, null, isHashLen ? { label: "Đưa sang tab Dò hash", tab: "crack", crackHash: compact.toLowerCase(), crackAlgo: compact.length === 40 ? "sha1" : compact.length === 64 ? "sha256" : compact.length === 128 ? "sha512" : "auto" } : null);
         }
         // Việc đoán "hex này là văn bản hay file" do engine Magic bên dưới đảm nhiệm.
@@ -3380,17 +3462,17 @@ function sha512Bytes(msg){
       if ((s[0] === "{" || s[0] === "[") ) {
         try {
           var parsedJson = JSON.parse(s);
-          add("JSON", 96, "Bắt đầu bằng " + s[0] + " và parse được thành JSON hợp lệ (" + (Array.isArray(parsedJson) ? "mảng" : "đối tượng") + ").", JSON.stringify(parsedJson, null, 2).slice(0, 900), null, null);
+          add("JSON", 96, "JSON · " + (Array.isArray(parsedJson) ? "mảng" : "đối tượng"), JSON.stringify(parsedJson, null, 2).slice(0, 900), null, null);
         } catch (e) {}
       }
-      if (/^https?:\/\/\S+$/.test(s)) add("URL", 95, "Bắt đầu bằng <span class='mono'>" + escapeHtml(s.split(":")[0]) + "://</span> và có cấu trúc của một địa chỉ web.", null, null, null);
+      if (/^https?:\/\/\S+$/.test(s)) add("URL", 95, s.split(":")[0] + "://", null, null, null);
       if (/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(compact))
-        add("UUID", 96, "Đúng khuôn 8-4-4-4-12 ký tự hex ngăn bằng gạch nối — định dạng định danh UUID/GUID. Đây là mã định danh, không phải dữ liệu bị mã hoá.", null, null, null);
+        add("UUID", 96, "8-4-4-4-12 hex", null, null, null);
       if (/^\d{10}$/.test(compact) || /^\d{13}$/.test(compact)) {
         var ms = compact.length === 13 ? parseInt(compact, 10) : parseInt(compact, 10) * 1000;
         var dt = new Date(ms);
         if (!isNaN(dt.getTime()) && dt.getFullYear() > 1990 && dt.getFullYear() < 2100)
-          add("Timestamp Unix (" + (compact.length === 13 ? "mili-giây" : "giây") + ")", 72, compact.length + " chữ số và khi đổi sang thời gian thì rơi vào " + dt.toLocaleString("vi-VN", { hour12: false }) + " — khoảng hợp lý cho một mốc thời gian thật.", dt.toISOString(), null, null);
+          add("Timestamp Unix (" + (compact.length === 13 ? "mili-giây" : "giây") + ")", 72, dt.toLocaleString("vi-VN", { hour12: false }), dt.toISOString(), null, null);
       }
 
       /* ----- ROT / Caesar & đảo ngược ----- */
@@ -3399,7 +3481,7 @@ function sha512Bytes(msg){
         var origScore = idWordScore(s);
         var rot13 = idRot(s, 13);
         var rot13Score = idWordScore(rot13);
-        if (rot13Score > origScore) add("ROT13 (Caesar dịch 13)", 78, "Áp ROT13 thì văn bản chứa nhiều từ/khuôn quen thuộc hơn bản gốc (điểm từ quen thuộc " + rot13Score + " so với " + origScore + ") — ROT13 là Caesar với độ dịch 13, tự nó là phép ngược của chính nó.", rot13, null, null);
+        if (rot13Score > origScore) add("ROT13 (Caesar dịch 13)", 78, "điểm từ: " + rot13Score + " vs " + origScore, rot13, null, null);
         else {
           // thử mọi độ dịch Caesar, lấy độ dịch cho điểm cao nhất
           var bestN = 0, bestScore = origScore, bestTxt = "";
@@ -3408,12 +3490,12 @@ function sha512Bytes(msg){
             var cand = idRot(s, rn), sc2 = idWordScore(cand);
             if (sc2 > bestScore) { bestScore = sc2; bestN = rn; bestTxt = cand; }
           }
-          if (bestN) add("Mã Caesar (dịch " + bestN + " ký tự để giải)", 58, "Thử cả 25 độ dịch Caesar thì độ dịch " + bestN + " cho văn bản có nhiều từ quen thuộc nhất (điểm " + bestScore + "). Caesar chỉ có 25 khả năng nên luôn đáng thử với văn bản toàn chữ cái bị xáo trộn.", bestTxt, null, null);
-          else add("ROT13 / Caesar (khả năng thấp)", 28, "Văn bản chủ yếu là chữ cái — luôn có thể là Caesar/ROT13, nhưng giải thử cả 25 độ dịch chưa độ dịch nào cho ra từ quen thuộc rõ rệt. Vẫn hiện bản ROT13 để bạn tự mắt kiểm tra.", rot13, null, null);
+          if (bestN) add("Mã Caesar (dịch " + bestN + " ký tự để giải)", 58, "dịch " + bestN + " · điểm " + bestScore, bestTxt, null, null);
+          else add("ROT13 / Caesar (khả năng thấp)", 28, "", rot13, null, null);
         }
         var reversed = s.split("").reverse().join("");
         if (idWordScore(reversed) > origScore || /^\}/.test(reversed))
-          add("Chuỗi bị đảo ngược (reverse)", 60, "Đảo ngược toàn bộ chuỗi thì văn bản trông hợp lý hơn bản gốc" + (/^\}/.test(reversed) ? " (bản đảo bắt đầu bằng } — dấu hiệu flag bị viết ngược)" : "") + ".", reversed, null, null);
+          add("Chuỗi bị đảo ngược (reverse)", 60, /^\}/.test(reversed) ? "sau đảo bắt đầu bằng }" : "", reversed, null, null);
       }
 
       /* ----- XOR đơn byte: chỉ gợi ý khi có manh mối ----- */
@@ -3427,16 +3509,16 @@ function sha512Bytes(msg){
           if (xr > bestRatio) { bestRatio = xr; bestKey = xk; bestBytes = xb; }
         }
         if (bestRatio > 0.95 && bestBytes && idWordScore(td.decode(bestBytes)) > 0)
-          add("XOR với khoá 1 byte (từ dữ liệu hex)", 64, "Thử XOR dữ liệu hex với từng khoá 1 byte (1-255) thì khoá <span class='mono'>0x" + bestKey.toString(16).toUpperCase() + " (" + bestKey + ")</span> cho ra văn bản đọc được — mẫu kinh điển của các bài crypto CTF vỡ lòng (như bài crackme-py dùng khoá suy từ một số nguyên).", idBytesPreview(bestBytes), bestBytes, null);
+          add("XOR với khoá 1 byte (từ dữ liệu hex)", 64, "khoá 0x" + bestKey.toString(16).toUpperCase() + " (" + bestKey + ")", idBytesPreview(bestBytes), bestBytes, null);
       }
 
       /* ----- Văn bản thường / không nhận ra ----- */
       if (!results.length) {
         var plainRatio = idPrintableRatio(te.encode(s));
         if (/[^\x00-\x7F]/.test(s) || /\s/.test(s.trim()) && ent < 4.8)
-          add("Văn bản thường (plaintext)", 70, "Không khớp khuôn của định dạng mã hoá phổ biến nào; có khoảng trắng/ký tự đọc được và entropy thấp — nhiều khả năng đây đã là văn bản gốc, hoặc bị biến đổi bằng phép thay thế tự chế (Vigenère, thay thế đơn bảng…) cần phân tích tần suất thay vì nhận diện khuôn.", null, null, null);
+          add("Văn bản thường", 70, "", null, null, null);
         else
-          add("Chưa nhận diện được — có thể là dữ liệu đã mã hoá thật hoặc định dạng lạ", 35, "Chuỗi không khớp khuôn Base64/Hex/hash/Morse… nào và entropy " + ent.toFixed(2) + " bit/ký tự. Dữ liệu đã mã hoá thật (AES, RSA) hoặc đã nén về bản chất không có khuôn nhận diện được từ bề mặt — muốn biết chắc phải có thêm ngữ cảnh: file này lấy từ đâu, kèm khoá/metadata gì không. Nếu đây là byte thô của một file, dùng tab Triage file hoặc Giải mã ảnh để soi magic bytes và strings.", null, null, null);
+          add("Chưa nhận diện được", 35, "entropy " + ent.toFixed(2), null, null, null);
       }
 
       results.sort(function (a, b) {
@@ -3445,7 +3527,7 @@ function sha512Bytes(msg){
         return am - bm;
       });
       elIdCount.textContent = results.length;
-      elIdStatus.textContent = "Đã phân tích xong — khả năng cao nhất: " + results[0].name + " (" + results[0].conf + "%).";
+      elIdStatus.textContent = "Cao nhất: " + results[0].name + " · " + results[0].conf + "%";
       elIdStatus.className = "status ok";
       elIdEmpty.style.display = "none";
       elIdResultsWrap.style.display = "";
@@ -3454,24 +3536,36 @@ function sha512Bytes(msg){
         var item = document.createElement("div");
         item.className = "detect-item";
         var html = '<div class="detect-head"><span class="dname">' + escapeHtml(r.name) + "</span>" + idConfBadge(r.conf) + "</div>";
-        html += '<p class="detect-ev">' + r.evidence + "</p>";
+        if (r.evidence) html += '<p class="detect-ev">' + escapeHtml(r.evidence) + "</p>";
+        var imgInfo = r.decodedBytes ? renderableImageInfo(r.decodedBytes) : null;
+        var imgUrl = null;
+        if (imgInfo) {
+          imgUrl = URL.createObjectURL(new Blob([r.decodedBytes], { type: imgInfo.mime }));
+          idImgUrls.push(imgUrl);
+          html += '<div class="img-preview-wrap"><span class="plabel">Ảnh đã giải · .' + escapeHtml(imgInfo.ext) + '</span><img class="img-preview id-result-img" src="' + imgUrl + '" alt="Ảnh giải mã được" onerror="this.style.display='none'" /><div class="img-meta id-img-meta"></div></div>';
+        }
         if (r.decodedText !== null && r.decodedText !== undefined && r.decodedText !== "")
           html += '<div class="detect-preview"><span class="plabel">Giải mã thử</span>' + escapeHtml(r.decodedText) + "</div>";
-        else if (r.decodedBytes)
-          html += '<div class="detect-preview"><span class="plabel">Dữ liệu đã giải — dạng hex</span>' + escapeHtml(bytesToHex(r.decodedBytes).slice(0, 400)) + "</div>";
+        else if (r.decodedBytes && !imgInfo)
+          html += '<div class="detect-preview"><span class="plabel">Hex</span>' + escapeHtml(bytesToHex(r.decodedBytes).slice(0, 96)) + (r.decodedBytes.length > 48 ? " …" : "") + "</div>";
         item.innerHTML = html;
+        if (imgUrl) {
+          var idImgEl = item.querySelector(".id-result-img");
+          var idMetaEl = item.querySelector(".id-img-meta");
+          if (idImgEl) fillImgMeta(idImgEl, idMetaEl);
+        }
         var btnRow = document.createElement("div");
         btnRow.className = "btnrow";
         var hasBtn = false;
         if (r.decodedText) {
           hasBtn = true;
           var cpBtn = document.createElement("button");
-          cpBtn.className = "btn small"; cpBtn.type = "button"; cpBtn.textContent = "Sao chép kết quả giải mã";
+          cpBtn.className = "btn small"; cpBtn.type = "button"; cpBtn.textContent = "Sao chép";
           (function (txt, b) { cpBtn.addEventListener("click", function () { copyText(txt, b); }); })(r.decodedText, cpBtn);
           btnRow.appendChild(cpBtn);
           if (r.decodedText.trim() !== s) {
             var reBtn = document.createElement("button");
-            reBtn.className = "btn small"; reBtn.type = "button"; reBtn.textContent = "Dùng kết quả này làm input mới (bóc lớp tiếp)";
+            reBtn.className = "btn small"; reBtn.type = "button"; reBtn.textContent = "Bóc lớp tiếp";
             (function (txt) { reBtn.addEventListener("click", function () { elIdInput.value = txt.trim(); analyzeInput(); elIdInput.scrollIntoView({ behavior: "smooth", block: "center" }); }); })(r.decodedText);
             btnRow.appendChild(reBtn);
           }
