@@ -636,10 +636,10 @@
         <h2>Image Steganography</h2>
 
         <div class="dropzone" id="stego-drop" role="button" tabindex="0" aria-label="Choose an image to analyze">
-          <strong>Drop an image file here</strong>
+          <strong>Drop an image or WAV file here</strong>
           or click to browse
         </div>
-        <input class="hidden-input" type="file" id="stego-file" accept="image/*,.png,.jpg,.jpeg,.gif,.bmp,.webp" />
+        <input class="hidden-input" type="file" id="stego-file" accept="image/*,.png,.jpg,.jpeg,.gif,.bmp,.webp,.wav,audio/wav" />
 
         <div id="stego-result" style="display:none; margin-top:16px;">
           <div class="found" id="st-flag-box">
@@ -727,6 +727,32 @@
             <textarea class="mono" id="st-lsb-text" rows="7" readonly spellcheck="false" placeholder="LSB data appears here…"></textarea>
             <label class="flabel" style="margin-top:12px;">Printable strings within the LSB stream</label>
             <div class="strings-box" id="st-lsb-strings" style="max-height:260px;">—</div>
+          </div>
+
+          <div class="card">
+            <h3>Steghide Extraction</h3>
+            <label class="flabel" for="st-sh-pass">Passphrase</label>
+            <div class="outrow">
+              <input type="text" id="st-sh-pass" class="mono" autocomplete="off" placeholder="Passphrase (empty allowed)" />
+              <button class="btn primary" id="st-sh-btn" type="button">Extract</button>
+            </div>
+            <div class="status dim" id="st-sh-status">JPEG / WAV carriers · steghide format</div>
+            <div id="st-sh-result" style="display:none;">
+              <dl class="kv" style="margin-top:12px;">
+                <dt>Embedded file name</dt><dd id="st-sh-name">—</dd>
+                <dt>Carrier</dt><dd id="st-sh-carrier">—</dd>
+                <dt>Encryption</dt><dd id="st-sh-enc">—</dd>
+                <dt>CRC32</dt><dd id="st-sh-crc">—</dd>
+              </dl>
+              <label class="flabel" for="st-sh-text" style="margin-top:12px;">Extracted data (text)</label>
+              <textarea class="mono" id="st-sh-text" rows="7" readonly spellcheck="false" placeholder="Extracted data appears here…"></textarea>
+              <img class="img-preview" id="st-sh-img" alt="Extracted image" style="display:none;" />
+              <div class="img-meta" id="st-sh-img-meta"></div>
+              <div class="btnrow">
+                <button class="btn small" id="st-sh-download" type="button">Download Extracted File</button>
+                <button class="btn small" id="st-sh-copy" type="button">Copy Text</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -2373,7 +2399,8 @@ function sha512Bytes(msg){
         document.getElementById("st-meta-list").textContent || "",
         document.getElementById("st-lsb-text").value || "",
         document.getElementById("st-lsb-strings").textContent || "",
-        document.getElementById("st-appended-strings").textContent || ""
+        document.getElementById("st-appended-strings").textContent || "",
+        document.getElementById("st-sh-text").value || ""
       ].join("\n");
       var m = hay.match(/[A-Za-z0-9_]{1,40}\{[^\s{}]{1,300}\}/);
       var box = document.getElementById("st-flag-box");
@@ -2404,6 +2431,7 @@ function sha512Bytes(msg){
         document.getElementById("st-format").textContent = fmt + (file.type ? " (browser MIME: " + file.type + ")" : "");
         document.getElementById("st-head").textContent = headHexSpaced(stBytes, 16) || "(empty file)";
         document.getElementById("st-dims").textContent = "reading…";
+        resetSteghideUi();
 
         // Strings trên dữ liệu thô
         var strings = extractStrings(stBytes, 4);
@@ -2617,6 +2645,657 @@ function sha512Bytes(msg){
       stringsEl.textContent = lsbStrings.slice(0, 500).join("\n") + (lsbStrings.length > 500 ? "\n… (showing first 500 strings)" : "") || "(no printable strings in LSB stream)";
       scanFlagInStego();
     }
+
+    /* ============================================================
+       Steghide extraction — a browser port of steghide 0.5.1's
+       extractor (EmbData / Selector / Extractor logic), supporting
+       JPEG (baseline DCT) and WAV (PCM) carriers, no encryption or
+       Rijndael (AES) encryption in ECB/CBC, zlib compression and
+       the CRC32 checksum (CRC-32/BZIP2 as used by libmhash).
+       Depends on: md5Bytes(), te (TextEncoder), inflateZlib().
+       ============================================================ */
+    var SH_ALGO_NAMES = ["none", "twofish", "rijndael-128", "rijndael-192", "rijndael-256", "saferplus", "rc2", "xtea", "serpent", "safer-sk64", "safer-sk128", "cast-256", "loki97", "gost", "threeway", "cast-128", "blowfish", "des", "tripledes", "enigma", "arcfour", "panama", "wake"];
+    var SH_MODE_NAMES = ["ecb", "cbc", "ofb", "cfb", "nofb", "ncfb", "ctr", "stream"];
+
+    /* ---------- CRC-32/BZIP2 (poly 0x04C11DB7, MSB-first, init/xorout 0xFFFFFFFF) ---------- */
+    var SH_CRC_TABLE = (function () {
+      var t = new Uint32Array(256);
+      for (var n = 0; n < 256; n++) {
+        var c = (n << 24) >>> 0;
+        for (var k = 0; k < 8; k++) c = (c & 0x80000000) ? (((c << 1) >>> 0) ^ 0x04c11db7) : ((c << 1) >>> 0);
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+    function shCrc32(bytes) {
+      var crc = 0xffffffff;
+      for (var i = 0; i < bytes.length; i++)
+        crc = (((crc << 8) >>> 0) ^ SH_CRC_TABLE[((crc >>> 24) ^ bytes[i]) & 0xff]) >>> 0;
+      return (crc ^ 0xffffffff) >>> 0;
+    }
+
+    /* ---------- Selector: passphrase-seeded permutation (steghide Selector + PseudoRandomSource) ---------- */
+    function shSelector(maximum, passphrase) {
+      var hash = md5Bytes(te.encode(passphrase));
+      function wordAt(byteOff) { // 32-bit value, LSB-first over hash bits == little-endian u32
+        return (hash[byteOff] | (hash[byteOff + 1] << 8) | (hash[byteOff + 2] << 16) | (hash[byteOff + 3] << 24)) >>> 0;
+      }
+      var seed = (wordAt(0) ^ wordAt(4) ^ wordAt(8) ^ wordAt(12)) >>> 0;
+      var state = seed;
+      function rndBelow(n) { // linear congruential generator, A=1367208549, C=1, mod 2^32
+        state = (Math.imul(1367208549, state) + 1) >>> 0;
+        return Math.floor(n * (state / 4294967296));
+      }
+      var X = [], Y = [], Xrev = new Map(), numInArray = 0;
+      function idxX(v, m) { var i = Xrev.get(v); return (i !== undefined && i < m) ? i : -1; }
+      function setX(i, v) { X[i] = v; Xrev.set(v, i); }
+      function calculate(m) {
+        var j = numInArray;
+        if (m > numInArray) numInArray = m;
+        for (; j < m; j++) {
+          var k = j + rndBelow(maximum - j);
+          var i = idxX(k, j);
+          if (i >= 0) {
+            setX(j, Y[i]);
+            if (X[j] > j) Y[j] = j;
+            if (X[i] > j) {
+              Y[i] = j;
+              var l = idxX(Y[i], j);
+              if (l >= 0) Y[i] = Y[l];
+            }
+          } else {
+            setX(j, k);
+            Y[j] = j;
+          }
+          if (X[j] > j) {
+            var i2 = idxX(Y[j], j);
+            if (i2 >= 0) Y[j] = Y[i2];
+          }
+        }
+      }
+      return {
+        at: function (i) { if (i + 1 > numInArray) calculate(i + 1); return X[i]; }
+      };
+    }
+
+    /* ---------- Bit source: groups of spv samples -> one embedded bit (sum mod 2) ---------- */
+    function shBitSource(evalues, spv, passphrase) {
+      var sel = shSelector(evalues.length, passphrase);
+      var consumed = 0; // samples consumed
+      function nextBit() {
+        if (consumed + spv > evalues.length) throw new Error("Carrier is too short to contain the embedded data.");
+        var ev = 0;
+        for (var j = 0; j < spv; j++) { ev += evalues[sel.at(consumed)]; consumed++; }
+        return ev % 2;
+      }
+      function readValue(n) { // LSB-first
+        var v = 0;
+        for (var i = 0; i < n; i++) v += nextBit() * Math.pow(2, i);
+        return v;
+      }
+      function readBits(n) { // returns {bytes: packed LSB-first, length: n}
+        var out = new Uint8Array(Math.ceil(n / 8));
+        for (var i = 0; i < n; i++) if (nextBit()) out[i >> 3] |= (1 << (i & 7));
+        return { bytes: out, length: n };
+      }
+      return { readValue: readValue, readBits: readBits };
+    }
+    function shBitsValue(bits, pos, n) { // LSB-first value from a packed bit string
+      var v = 0;
+      for (var i = 0; i < n; i++) {
+        var p = pos + i;
+        if ((bits.bytes[p >> 3] >> (p & 7)) & 1) v += Math.pow(2, i);
+      }
+      return v;
+    }
+    function shBitsByte(bits, pos) { return shBitsValue(bits, pos, 8); }
+
+    /* ---------- libmcrypt KEYGEN_MCRYPT key derivation (MD5, no salt) ---------- */
+    function shMcryptKey(passphrase, keySize) {
+      var pw = te.encode(passphrase);
+      var key = new Uint8Array(0);
+      while (key.length < keySize) {
+        var input = new Uint8Array(pw.length + key.length);
+        input.set(pw); input.set(key, pw.length);
+        var digest = md5Bytes(input);
+        var take = Math.min(keySize - key.length, 16);
+        var nk = new Uint8Array(key.length + take);
+        nk.set(key); nk.set(digest.subarray(0, take), key.length);
+        key = nk;
+      }
+      return key;
+    }
+
+    /* ---------- Rijndael block cipher (generic Nb/Nk), decryption only ---------- */
+    var SH_SBOX = (function () {
+      // generated via GF(2^8) inverse + affine transform
+      function gfMul(a, b) {
+        var p = 0;
+        for (var i = 0; i < 8; i++) {
+          if (b & 1) p ^= a;
+          var hi = a & 0x80;
+          a = (a << 1) & 0xff;
+          if (hi) a ^= 0x1b;
+          b >>= 1;
+        }
+        return p;
+      }
+      var inv = new Uint8Array(256);
+      for (var x = 1; x < 256; x++) {
+        var y = 1;
+        while (gfMul(x, y) !== 1) y++;
+        inv[x] = y;
+      }
+      var sbox = new Uint8Array(256), invSbox = new Uint8Array(256);
+      for (var i = 0; i < 256; i++) {
+        var s = inv[i];
+        var v = (s ^ ((s << 1) | (s >> 7)) ^ ((s << 2) | (s >> 6)) ^ ((s << 3) | (s >> 5)) ^ ((s << 4) | (s >> 4)) ^ 0x63) & 0xff;
+        sbox[i] = v; invSbox[v] = i;
+      }
+      return { sbox: sbox, invSbox: invSbox, gfMul: gfMul };
+    })();
+    function shRijndaelExpandKey(key, nb) {
+      var nk = key.length / 4;
+      var nr = Math.max(nb, nk) + 6;
+      var w = [];
+      var i;
+      for (i = 0; i < nk; i++) w.push([key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]]);
+      var rcon = 1;
+      for (i = nk; i < 4 * (nr + 1); i++) {
+        var t = w[i - 1].slice();
+        if (i % nk === 0) {
+          t = [SH_SBOX.sbox[t[1]] ^ rcon, SH_SBOX.sbox[t[2]], SH_SBOX.sbox[t[3]], SH_SBOX.sbox[t[0]]];
+          rcon = SH_SBOX.gfMul(rcon, 2);
+        } else if (nk > 6 && i % nk === 4) {
+          t = [SH_SBOX.sbox[t[0]], SH_SBOX.sbox[t[1]], SH_SBOX.sbox[t[2]], SH_SBOX.sbox[t[3]]];
+        }
+        var prev = w[i - nk];
+        w.push([prev[0] ^ t[0], prev[1] ^ t[1], prev[2] ^ t[2], prev[3] ^ t[3]]);
+      }
+      return { w: w, nr: nr };
+    }
+    function shRijndaelDecryptBlock(exp, nb, block) {
+      var shifts = nb === 8 ? [0, 1, 3, 4] : [0, 1, 2, 3];
+      var s = block.slice(); // state byte at (r + 4*c)
+      function addRoundKey(round) {
+        for (var c = 0; c < nb; c++) for (var r = 0; r < 4; r++)
+          s[r + 4 * c] ^= exp.w[round * nb + c][r];
+      }
+      function invShiftRows() {
+        var t = s.slice();
+        for (var r = 1; r < 4; r++) for (var c = 0; c < nb; c++)
+          s[r + 4 * c] = t[r + 4 * (((c - shifts[r]) % nb + nb) % nb)];
+      }
+      function invSubBytes() { for (var i = 0; i < s.length; i++) s[i] = SH_SBOX.invSbox[s[i]]; }
+      function gf(a, b) { return SH_SBOX.gfMul(a, b); }
+      function invMixColumns() {
+        for (var c = 0; c < nb; c++) {
+          var a0 = s[4 * c], a1 = s[4 * c + 1], a2 = s[4 * c + 2], a3 = s[4 * c + 3];
+          s[4 * c]     = gf(a0, 14) ^ gf(a1, 11) ^ gf(a2, 13) ^ gf(a3, 9);
+          s[4 * c + 1] = gf(a0, 9) ^ gf(a1, 14) ^ gf(a2, 11) ^ gf(a3, 13);
+          s[4 * c + 2] = gf(a0, 13) ^ gf(a1, 9) ^ gf(a2, 14) ^ gf(a3, 11);
+          s[4 * c + 3] = gf(a0, 11) ^ gf(a1, 13) ^ gf(a2, 9) ^ gf(a3, 14);
+        }
+      }
+      addRoundKey(exp.nr);
+      for (var round = exp.nr - 1; round >= 1; round--) {
+        invShiftRows(); invSubBytes(); addRoundKey(round); invMixColumns();
+      }
+      invShiftRows(); invSubBytes(); addRoundKey(0);
+      return s;
+    }
+    function shRijndaelDecrypt(algo, mode, data, passphrase, keySizeOverride) {
+      var blockBytes = algo === 2 ? 16 : (algo === 3 ? 24 : 32);
+      var nb = blockBytes / 4;
+      var keySize = keySizeOverride || 32; // libmcrypt reports the maximum key size
+      var key = shMcryptKey(passphrase, keySize);
+      var exp = shRijndaelExpandKey(key, nb);
+      var iv = null, ct = data;
+      if (mode === 1) { // cbc: IV is prepended
+        iv = data.subarray(0, blockBytes);
+        ct = data.subarray(blockBytes);
+      }
+      if (ct.length % blockBytes !== 0) throw new Error("Encrypted data has an invalid length.");
+      var out = new Uint8Array(ct.length);
+      var prev = iv;
+      for (var off = 0; off < ct.length; off += blockBytes) {
+        var block = Array.prototype.slice.call(ct.subarray(off, off + blockBytes));
+        var dec = shRijndaelDecryptBlock(exp, nb, block);
+        for (var i = 0; i < blockBytes; i++)
+          out[off + i] = mode === 1 ? (dec[i] ^ prev[i]) : dec[i];
+        prev = ct.subarray(off, off + blockBytes);
+      }
+      return out;
+    }
+
+    /* jpeg_natural_order: maps a zigzag position to the natural (raster) index
+       inside an 8x8 block, as used by libjpeg's coefficient arrays */
+    var SH_NATURAL = [0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63];
+
+    /* ---------- JPEG: extract |DCT coefficient| mod 2 for every nonzero coefficient,
+       in libjpeg order (component, block row, block column, natural position) ---------- */
+    function shJpegEValues(bytes) {
+      if (bytes.length < 2 || bytes[0] !== 0xff || bytes[1] !== 0xd8)
+        throw new Error("Not a JPEG file.");
+      function u16be(o) { return (bytes[o] << 8) | bytes[o + 1]; }
+      var comps = null, frameSeen = false;
+      var huffTables = { dc: {}, ac: {} };
+      var restartInterval = 0;
+      var pos = 2;
+      var grids = null; // per SOF component: {comp, wide, high, data:Int16Array}
+
+      function buildHuff(counts, symbols) {
+        var mincode = new Int32Array(17), maxcode = new Int32Array(17), valptr = new Int32Array(17);
+        var code = 0, si = 0;
+        for (var l = 1; l <= 16; l++) {
+          if (counts[l - 1] > 0) {
+            valptr[l] = si; mincode[l] = code;
+            code += counts[l - 1]; si += counts[l - 1]; maxcode[l] = code - 1;
+          } else maxcode[l] = -1;
+          code <<= 1;
+        }
+        return { mincode: mincode, maxcode: maxcode, valptr: valptr, symbols: symbols };
+      }
+
+      function decodeScan(scanStart, scanComps) {
+        // bit reader over entropy-coded data
+        var r = { pos: scanStart, acc: 0, accBits: 0, hitMarker: 0, markerPos: -1 };
+        function rawByte() {
+          if (r.pos >= bytes.length) return -1;
+          var b = bytes[r.pos];
+          if (b !== 0xff) { r.pos++; return b; }
+          var q = r.pos + 1;
+          while (q < bytes.length && bytes[q] === 0xff) q++;
+          if (q >= bytes.length) { r.pos = q; return -1; }
+          var n = bytes[q];
+          if (n === 0) { r.pos = q + 1; return 0xff; }
+          if (n >= 0xd0 && n <= 0xd7) { r.pos = q + 1; r.hitMarker = n; return -2; }
+          r.hitMarker = n; r.markerPos = r.pos; return -3;
+        }
+        function getBit() {
+          if (r.accBits === 0) {
+            var rb = rawByte();
+            if (rb < 0) throw new Error("Unexpected end of JPEG scan data.");
+            r.acc = rb; r.accBits = 8;
+          }
+          r.accBits--;
+          return (r.acc >> r.accBits) & 1;
+        }
+        function getBits(n) {
+          var v = 0;
+          for (var i = 0; i < n; i++) v = (v << 1) | getBit();
+          return v;
+        }
+        function huffDecode(tab) {
+          if (!tab) throw new Error("JPEG uses an undefined Huffman table.");
+          var code = getBit(), l = 1;
+          while (l <= 16 && (tab.maxcode[l] < 0 || code > tab.maxcode[l])) {
+            code = (code << 1) | getBit(); l++;
+          }
+          if (l > 16) throw new Error("Invalid Huffman code in JPEG scan data.");
+          return tab.symbols[tab.valptr[l] + code - tab.mincode[l]];
+        }
+        function extend(v, n) { return v < (1 << (n - 1)) ? v - (1 << n) + 1 : v; }
+        var preds = {};
+        scanComps.forEach(function (sc) { preds[sc.idx] = 0; });
+        function decodeBlock(sc, grid, blockIdx) {
+          var base = blockIdx * 64;
+          var size = huffDecode(huffTables.dc[sc.dcTab]);
+          var diff = size ? extend(getBits(size), size) : 0;
+          preds[sc.idx] += diff;
+          if (grid) grid.data[base] = preds[sc.idx];
+          var acTab = huffTables.ac[sc.acTab];
+          var k = 1; // k is the zigzag position; libjpeg stores blocks in natural order
+          while (k < 64) {
+            var sym = huffDecode(acTab);
+            var run = sym >> 4, sz = sym & 15;
+            if (sz === 0) {
+              if (run === 15) { k += 16; continue; }
+              break; // EOB
+            }
+            k += run;
+            if (k > 63) throw new Error("Invalid run length in JPEG scan data.");
+            var v = extend(getBits(sz), sz);
+            if (grid) grid.data[base + SH_NATURAL[k]] = v;
+            k++;
+          }
+        }
+        function doRestart() {
+          r.acc = 0; r.accBits = 0;
+          scanComps.forEach(function (sc) { preds[sc.idx] = 0; });
+          if (restartInterval > 0) {
+            var rb = rawByte();
+            if (rb !== -2) throw new Error("Expected a restart marker in JPEG scan data.");
+            r.hitMarker = 0;
+          }
+        }
+        var mcuCount = 0;
+        function afterMcu(totalMcus) {
+          mcuCount++;
+          if (restartInterval > 0 && mcuCount % restartInterval === 0 && mcuCount < totalMcus) doRestart();
+        }
+        if (scanComps.length === 1) {
+          var sc = scanComps[0], g = grids[sc.idx];
+          var total = g.wide * g.high;
+          for (var by = 0; by < g.high; by++) for (var bx = 0; bx < g.wide; bx++) {
+            decodeBlock(sc, g, by * g.wide + bx);
+            afterMcu(total);
+          }
+        } else {
+          var maxH = 0, maxV = 0;
+          comps.forEach(function (c) { if (c.h > maxH) maxH = c.h; if (c.v > maxV) maxV = c.v; });
+          var mcuX = Math.ceil(frameW / (8 * maxH));
+          var mcuY = Math.ceil(frameH / (8 * maxV));
+          var totalM = mcuX * mcuY;
+          for (var my = 0; my < mcuY; my++) for (var mx = 0; mx < mcuX; mx++) {
+            for (var ci = 0; ci < scanComps.length; ci++) {
+              var s2 = scanComps[ci], cp = comps[s2.idx], gr = grids[s2.idx];
+              for (var vv = 0; vv < cp.v; vv++) for (var hh = 0; hh < cp.h; hh++) {
+                var byy = my * cp.v + vv, bxx = mx * cp.h + hh;
+                if (byy < gr.high && bxx < gr.wide) decodeBlock(s2, gr, byy * gr.wide + bxx);
+                else decodeBlock(s2, null, 0); // padded edge block: decode and discard
+              }
+            }
+            afterMcu(totalM);
+          }
+        }
+        return (r.markerPos >= 0) ? r.markerPos : r.pos;
+      }
+
+      var frameW = 0, frameH = 0;
+      while (pos + 1 < bytes.length) {
+        if (bytes[pos] !== 0xff) { pos++; continue; }
+        var marker = bytes[pos + 1];
+        if (marker === 0xff) { pos++; continue; }
+        if (marker === 0x00) { pos += 2; continue; }
+        if (marker === 0xd9) break; // EOI
+        if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd8)) { pos += 2; continue; }
+        if (pos + 4 > bytes.length) break;
+        var segLen = u16be(pos + 2);
+        if (segLen < 2) throw new Error("Corrupt JPEG segment.");
+        var segData = pos + 4, segEnd = pos + 2 + segLen;
+        if (marker === 0xc0 || marker === 0xc1) { // SOF0 / SOF1
+          if (bytes[segData] !== 8) throw new Error("Only 8-bit JPEG files are supported.");
+          frameH = u16be(segData + 1); frameW = u16be(segData + 3);
+          var nc = bytes[segData + 5];
+          comps = [];
+          var mxH = 0, mxV = 0;
+          for (var i = 0; i < nc; i++) {
+            var o = segData + 6 + i * 3;
+            var cp = { id: bytes[o], h: bytes[o + 1] >> 4, v: bytes[o + 1] & 15 };
+            comps.push(cp);
+            if (cp.h > mxH) mxH = cp.h;
+            if (cp.v > mxV) mxV = cp.v;
+          }
+          grids = comps.map(function (cp) {
+            var wide = Math.ceil(frameW * cp.h / (8 * mxH));
+            var high = Math.ceil(frameH * cp.v / (8 * mxV));
+            return { wide: wide, high: high, data: new Int16Array(wide * high * 64) };
+          });
+          frameSeen = true;
+        } else if (marker === 0xc2) {
+          throw new Error("Progressive JPEG — not supported.");
+        } else if ((marker >= 0xc3 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc)) {
+          throw new Error("Unsupported JPEG encoding (SOF 0xFF" + marker.toString(16).toUpperCase() + ").");
+        } else if (marker === 0xcc) {
+          throw new Error("Arithmetic-coded JPEG — not supported.");
+        } else if (marker === 0xc4) { // DHT
+          var p = segData;
+          while (p < segEnd) {
+            var tc = bytes[p] >> 4, th = bytes[p] & 15;
+            var counts = Array.prototype.slice.call(bytes.subarray(p + 1, p + 17));
+            var total = counts.reduce(function (a, b) { return a + b; }, 0);
+            var symbols = bytes.subarray(p + 17, p + 17 + total);
+            var tab = buildHuff(counts, symbols);
+            if (tc === 0) huffTables.dc[th] = tab; else huffTables.ac[th] = tab;
+            p += 17 + total;
+          }
+        } else if (marker === 0xdd) { // DRI
+          restartInterval = u16be(segData);
+        } else if (marker === 0xda) { // SOS
+          if (!frameSeen) throw new Error("JPEG scan found before frame header.");
+          var ns = bytes[segData];
+          var scanComps = [];
+          for (var j = 0; j < ns; j++) {
+            var oo = segData + 1 + j * 2;
+            var cid = bytes[oo];
+            var idx = -1;
+            comps.forEach(function (c, ci2) { if (c.id === cid) idx = ci2; });
+            if (idx < 0) throw new Error("JPEG scan references an unknown component.");
+            scanComps.push({ idx: idx, dcTab: bytes[oo + 1] >> 4, acTab: bytes[oo + 1] & 15 });
+          }
+          pos = decodeScan(segEnd, scanComps);
+          continue;
+        }
+        pos = segEnd;
+      }
+      if (!frameSeen || !grids) throw new Error("No JPEG frame found.");
+      var out = [];
+      grids.forEach(function (g) {
+        for (var i = 0; i < g.data.length; i++) {
+          var v = g.data[i];
+          if (v !== 0) out.push(Math.abs(v) % 2);
+        }
+      });
+      return new Uint8Array(out);
+    }
+
+    /* ---------- WAV: extract sample LSBs (PCM) ---------- */
+    function shWavEValues(bytes) {
+      function latin1(o, n) { var s = ""; for (var i = 0; i < n; i++) s += String.fromCharCode(bytes[o + i]); return s; }
+      if (bytes.length < 44 || latin1(0, 4) !== "RIFF" || latin1(8, 4) !== "WAVE")
+        throw new Error("Not a WAV file.");
+      function u16le(o) { return bytes[o] | (bytes[o + 1] << 8); }
+      function u32le(o) { return (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0; }
+      var fmt = null, data = null, pos = 12;
+      while (pos + 8 <= bytes.length) {
+        var id = latin1(pos, 4), size = u32le(pos + 4);
+        var dStart = pos + 8, dEnd = Math.min(dStart + size, bytes.length);
+        if (id === "fmt ") fmt = { format: u16le(dStart), bits: u16le(dStart + 14) };
+        else if (id === "data" && !data) data = bytes.subarray(dStart, dEnd);
+        pos = dStart + size + (size & 1);
+      }
+      if (!fmt) throw new Error("WAV file has no fmt chunk.");
+      if (fmt.format !== 1) throw new Error("Only uncompressed PCM WAV files are supported.");
+      if (!data) throw new Error("WAV file has no data chunk.");
+      var bits = fmt.bits;
+      var bytesPerSample = Math.ceil(bits / 8);
+      var firstBitPos = bits % 8 === 0 ? 0 : 8 - (bits % 8);
+      var mask = bits >= 32 ? 0xffffffff : ((1 << bits) - 1);
+      var n = Math.floor(data.length / bytesPerSample);
+      var out = new Uint8Array(n);
+      for (var i = 0; i < n; i++) {
+        var raw = 0;
+        for (var b = bytesPerSample - 1; b >= 0; b--) raw = raw * 256 + data[i * bytesPerSample + b];
+        var value = Math.floor(raw / Math.pow(2, firstBitPos)) & mask;
+        out[i] = value & 1;
+      }
+      return out;
+    }
+
+    /* ---------- Carrier dispatch ---------- */
+    function shCarrier(bytes) {
+      if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
+        return { kind: "JPEG", spv: 3, evalues: shJpegEValues(bytes) };
+      if (bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+          bytes[8] === 0x57 && bytes[9] === 0x41 && bytes[10] === 0x56 && bytes[11] === 0x45)
+        return { kind: "WAV", spv: 2, evalues: shWavEValues(bytes) };
+      if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+        throw new Error("Steghide does not support PNG carriers.");
+      if (bytes.length >= 2 && bytes[0] === 0x42 && bytes[1] === 0x4d)
+        throw new Error("BMP carriers are not supported by this extractor.");
+      throw new Error("Unsupported carrier — steghide uses JPEG or WAV files.");
+    }
+
+    /* ---------- Full extraction (async: zlib decompression) ---------- */
+    function shExtract(bytes, passphrase) {
+      var carrier = shCarrier(bytes);
+      if (!carrier.evalues.length) throw new Error("Carrier contains no usable samples.");
+      var src = shBitSource(carrier.evalues, carrier.spv, passphrase);
+      var magic = src.readValue(24);
+      if (magic !== 0x73688d)
+        throw new Error("No steghide data found for this passphrase.");
+      var version = 0;
+      while (src.readValue(1) === 1) {
+        version++;
+        if (version > 20) throw new Error("Corrupt steghide header.");
+      }
+      if (version > 0) throw new Error("Unsupported steghide embedding version " + version + ".");
+      var algo = src.readValue(5);
+      var mode = src.readValue(3);
+      var algoName = SH_ALGO_NAMES[algo] || ("unknown (" + algo + ")");
+      var modeName = SH_MODE_NAMES[mode] || ("unknown (" + mode + ")");
+      if (algo !== 0 && !(algo >= 2 && algo <= 4))
+        throw new Error("Embedded data is encrypted with " + algoName + " — not supported.");
+      if (algo !== 0 && mode !== 0 && mode !== 1)
+        throw new Error("Encryption mode " + modeName + " is not supported (ECB/CBC only).");
+      var nPlainBits = src.readValue(32);
+      var encBits;
+      if (algo === 0) encBits = nPlainBits;
+      else {
+        var blockBits = algo === 2 ? 128 : (algo === 3 ? 192 : 256);
+        encBits = blockBits + Math.ceil(nPlainBits / blockBits) * blockBits;
+      }
+      var enc = src.readBits(encBits);
+      var plainBits;
+      if (algo === 0) {
+        plainBits = { bytes: enc.bytes, length: nPlainBits };
+      } else {
+        var decBytes = shRijndaelDecrypt(algo, mode, enc.bytes, passphrase);
+        plainBits = { bytes: decBytes, length: nPlainBits };
+      }
+      // Parse the plain bit string
+      var pos = 0;
+      var compressed = shBitsValue(plainBits, pos, 1) === 1; pos += 1;
+      var afterInflate = function (bits2, startPos) {
+        var p = startPos || 0;
+        var hasChecksum = shBitsValue(bits2, p, 1) === 1; p += 1;
+        var crcStored = null;
+        if (hasChecksum) { crcStored = shBitsValue(bits2, p, 32); p += 32; }
+        var fileName = "";
+        while (true) {
+          if (p + 8 > bits2.length) throw new Error("Corrupt embedded data (filename).");
+          var ch = shBitsByte(bits2, p); p += 8;
+          if (ch === 0) break;
+          fileName += String.fromCharCode(ch);
+          if (fileName.length > 512) throw new Error("Corrupt embedded data (filename).");
+        }
+        if ((bits2.length - p) % 8 !== 0) throw new Error("Embedded data has an invalid length.");
+        var nData = (bits2.length - p) / 8;
+        var data = new Uint8Array(nData);
+        for (var i = 0; i < nData; i++) { data[i] = shBitsByte(bits2, p); p += 8; }
+        var crcOk = null;
+        if (hasChecksum) crcOk = shCrc32(data) === crcStored;
+        return {
+          carrier: carrier.kind, algo: algoName, mode: algo === 0 ? null : modeName,
+          compressed: compressed, hasChecksum: hasChecksum, crcOk: crcOk,
+          fileName: fileName, data: data
+        };
+      };
+      if (!compressed) return Promise.resolve(afterInflate(plainBits, pos));
+      var nUncompBits = shBitsValue(plainBits, pos, 32); pos += 32;
+      var compLenBits = plainBits.length - pos;
+      if (compLenBits % 8 !== 0) throw new Error("Corrupt compressed data.");
+      var compBytes = new Uint8Array(compLenBits / 8);
+      for (var j = 0; j < compBytes.length; j++) compBytes[j] = shBitsByte(plainBits, pos + j * 8);
+      return inflateZlib(compBytes).then(function (dec) {
+        var bits2 = { bytes: dec, length: nUncompBits };
+        if (dec.length * 8 < nUncompBits) throw new Error("Decompressed data is shorter than expected.");
+        return afterInflate(bits2);
+      });
+    }
+
+    /* ---------- Steghide: UI wiring ---------- */
+    var stShData = null, stShFileName = "extracted.bin";
+    var elShPass = document.getElementById("st-sh-pass");
+    var elShBtn = document.getElementById("st-sh-btn");
+    var elShStatus = document.getElementById("st-sh-status");
+    function resetSteghideUi() {
+      stShData = null;
+      document.getElementById("st-sh-result").style.display = "none";
+      document.getElementById("st-sh-text").value = "";
+      var img = document.getElementById("st-sh-img");
+      img.removeAttribute("src"); img.style.display = "none";
+      document.getElementById("st-sh-img-meta").textContent = "";
+      elShBtn.disabled = false;
+      var msg = "JPEG / WAV carriers · steghide format";
+      if (stBytes) {
+        if (stBytes.length >= 3 && stBytes[0] === 0xff && stBytes[1] === 0xd8) msg = "Ready.";
+        else if (stBytes.length >= 12 && bytesToLatin1(stBytes.subarray(0, 4)) === "RIFF" && bytesToLatin1(stBytes.subarray(8, 12)) === "WAVE") msg = "Ready.";
+        else if (stBytes.length >= 4 && stBytes[0] === 0x89 && stBytes[1] === 0x50) msg = "Steghide does not support PNG carriers.";
+        else if (stBytes.length >= 2 && stBytes[0] === 0x42 && stBytes[1] === 0x4d) msg = "BMP carriers are not supported.";
+        else msg = "Unsupported carrier — steghide uses JPEG or WAV files.";
+      }
+      elShStatus.textContent = msg;
+      elShStatus.className = "status dim";
+    }
+    function shSafeName(name) {
+      var n = String(name || "").split(/[\\/]/).pop().replace(/^\.+/, "").trim();
+      return n || "extracted.bin";
+    }
+    function runSteghide() {
+      if (!stBytes) return;
+      elShBtn.disabled = true;
+      elShStatus.textContent = "Extracting…";
+      elShStatus.className = "status dim";
+      setTimeout(function () {
+        var p;
+        try { p = shExtract(stBytes, elShPass.value); }
+        catch (e) { shShowError(e); return; }
+        p.then(shShowResult, shShowError);
+      }, 30);
+    }
+    function shShowError(e) {
+      elShBtn.disabled = false;
+      document.getElementById("st-sh-result").style.display = "none";
+      elShStatus.textContent = (e && e.message) || "Extraction failed.";
+      elShStatus.className = "status err";
+    }
+    function shShowResult(r) {
+      elShBtn.disabled = false;
+      stShData = r.data;
+      stShFileName = shSafeName(r.fileName);
+      document.getElementById("st-sh-result").style.display = "";
+      document.getElementById("st-sh-name").textContent = r.fileName || "(none embedded)";
+      document.getElementById("st-sh-carrier").textContent = r.carrier;
+      var encTxt = r.algo === "none" ? "none" : (r.algo + " · " + r.mode);
+      if (r.compressed) encTxt += " · zlib compressed";
+      document.getElementById("st-sh-enc").textContent = encTxt;
+      document.getElementById("st-sh-crc").textContent = !r.hasChecksum ? "not embedded" : (r.crcOk ? "OK" : "FAILED — data may be corrupt");
+      elShStatus.textContent = r.data.length.toLocaleString("en-US") + " bytes extracted.";
+      elShStatus.className = "status ok";
+      var txt = td.decode(r.data);
+      document.getElementById("st-sh-text").value = txt.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ".");
+      var img = document.getElementById("st-sh-img");
+      var info = renderableImageInfo(r.data);
+      if (window.__stShUrl) URL.revokeObjectURL(window.__stShUrl);
+      if (info) {
+        window.__stShUrl = URL.createObjectURL(new Blob([r.data], { type: info.mime }));
+        img.onerror = function () { img.style.display = "none"; };
+        img.src = window.__stShUrl;
+        img.style.display = "";
+        fillImgMeta(img, document.getElementById("st-sh-img-meta"));
+      } else {
+        img.removeAttribute("src"); img.style.display = "none";
+        document.getElementById("st-sh-img-meta").textContent = "";
+      }
+      scanFlagInStego();
+    }
+    elShBtn.addEventListener("click", runSteghide);
+    elShPass.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); runSteghide(); } });
+    document.getElementById("st-sh-download").addEventListener("click", function () {
+      if (!stShData) return;
+      var blob = new Blob([stShData], { type: "application/octet-stream" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = stShFileName;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 400);
+    });
+    document.getElementById("st-sh-copy").addEventListener("click", function () {
+      copyText(document.getElementById("st-sh-text").value, this);
+    });
+
 
     /* ============================================================
        CUPP — a browser port of cupp.py (Mebus/cupp).
