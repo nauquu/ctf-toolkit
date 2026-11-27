@@ -198,6 +198,26 @@
       }
       .detect-preview .plabel{ font-family:var(--sans); font-size:12px; color:var(--faint); text-transform:uppercase; letter-spacing:0.07em; display:block; margin-bottom:4px; }
       .sample-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+
+      /* ---------- Hai cột cho luồng convert nhiều tầng ---------- */
+      .cols2.start{ align-items:start; }
+      /* Tab Chuyển đổi: Base64 và Hex đặt cạnh nhau, HMAC trải ngang dưới */
+      .conv-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
+      .conv-grid > .card{ margin-bottom:0; min-width:0; }
+      .conv-grid > .card.wide{ grid-column:1 / -1; }
+      #panel-conv .conv-grid .card-cols{ grid-template-columns:1fr; }
+      #panel-conv .conv-grid .conv-top{ grid-template-columns:1fr; }
+      #panel-conv .conv-grid > .card.wide .card-cols{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+      #panel-conv .conv-grid > .card.wide .conv-top{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+      @media (max-width:900px){
+        .conv-grid{ grid-template-columns:1fr; }
+        #panel-conv .conv-grid > .card.wide .card-cols{ grid-template-columns:1fr; }
+        #panel-conv .conv-grid > .card.wide .conv-top{ grid-template-columns:1fr; }
+      }
+      /* Tab Phân tích input: cột trái (input + đặc điểm) dính khi cuộn,
+         để bóc từng lớp mã hoá mà không phải cuộn lên xuống */
+      .id-side{ position:sticky; top:14px; }
+      @media (max-width:900px){ .id-side{ position:static; } }
     </style>
   </head>
   <body>
@@ -443,8 +463,9 @@
       <!-- ================= CONVERTERS ================= -->
       <section class="panel" id="panel-conv" role="tabpanel">
         <h2>Chuyển đổi lặt vặt</h2>
-        <p class="lede">Base64 / Base64URL, Hex và máy tính HMAC-SHA256 — tất cả chạy realtime: gõ tới đâu, ô còn lại cập nhật tới đó, không cần bấm nút. Gõ ở ô mã hoá thì trang giải mã ngược lại ngay; dữ kiện đang gõ dở chưa hợp lệ sẽ chỉ hiện ghi chú nhẹ, không báo lỗi.</p>
+        <p class="lede">Base64 / Base64URL, Hex và máy tính HMAC-SHA256 — tất cả chạy realtime: gõ tới đâu, ô còn lại cập nhật tới đó, không cần bấm nút. Gõ ở ô mã hoá thì trang giải mã ngược lại ngay; dữ kiện đang gõ dở chưa hợp lệ sẽ chỉ hiện ghi chú nhẹ, không báo lỗi. Bố cục hai cột đặt Base64 và Hex cạnh nhau để chuyền kết quả qua lại khi phải convert nhiều tầng.</p>
 
+        <div class="conv-grid">
         <div class="card">
           <h3>Base64 / Base64URL ↔ văn bản</h3>
           <div class="conv-top">
@@ -492,7 +513,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card wide">
           <h3>Máy tính HMAC-SHA256</h3>
           <div class="conv-top">
             <div>
@@ -519,6 +540,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
       </section>
 
@@ -846,10 +868,12 @@
       <!-- ================= PHÂN TÍCH INPUT / ĐOÁN LOẠI MÃ HOÁ ================= -->
       <section class="panel" id="panel-identify" role="tabpanel">
         <h2>Phân tích input — đoán loại mã hoá / chuyển đổi</h2>
-        <p class="lede">Dán bất kỳ chuỗi lạ nào vào — một đoạn hash, một cục Base64, token, dãy nhị phân, Morse, chuỗi bị mã hoá nhiều lớp… — trang sẽ soi cấu trúc của nó (bảng ký tự, độ dài, dấu hiệu định dạng, entropy), xếp hạng các khả năng từ chắc chắn nhất xuống, và <strong>thử giải mã thật</strong> từng khả năng để bạn xem trước kết quả. Gặp mã hoá lồng nhau, bấm “Dùng kết quả này làm input mới” ở lớp vừa bóc để bóc tiếp lớp trong. Mọi phân tích chạy ngay khi gõ, 100% trong trình duyệt.</p>
+        <p class="lede">Dán bất kỳ chuỗi lạ nào vào — một đoạn hash, một cục Base64, token, dãy nhị phân, Morse, chuỗi bị mã hoá nhiều lớp… — trang sẽ soi cấu trúc của nó (bảng ký tự, độ dài, dấu hiệu định dạng, entropy), xếp hạng các khả năng từ chắc chắn nhất xuống, và <strong>thử giải mã thật</strong> từng khả năng để bạn xem trước kết quả. Gặp mã hoá lồng nhau, bấm “Dùng kết quả này làm input mới” ở lớp vừa bóc để bóc tiếp lớp trong. Bố cục hai cột: input và đặc điểm nằm cố định ở cột trái, kết quả ở cột phải — bóc hết lớp này sang lớp khác mà không phải cuộn trang. Mọi phân tích chạy ngay khi gõ, 100% trong trình duyệt.</p>
 
-        <div class="card">
-          <label class="flabel" for="id-input">Input cần phân tích</label>
+        <div class="cols2 start">
+          <div class="col-stack id-side">
+            <div class="card">
+              <label class="flabel" for="id-input">Input cần phân tích</label>
           <textarea class="mono" id="id-input" rows="7" spellcheck="false" placeholder="Dán chuỗi cần nhận diện vào đây — ví dụ: ZmxhZ3toZWxsb30= , 666c6167 , eyJhbGciOi… , ..-. .-.. .- --. , 01100110 01101100…"></textarea>
           <div class="sample-row" aria-label="Dữ kiện mẫu để thử nhanh">
             <span style="font-size:13px; color:var(--faint); align-self:center;">Thử nhanh:</span>
@@ -866,15 +890,24 @@
           <div class="status dim" id="id-status">Chưa có input.</div>
         </div>
 
-        <div class="card" id="id-stats-card" style="display:none;">
-          <h3>Đặc điểm của input</h3>
-          <div class="claims" id="id-stats"></div>
-        </div>
+            <div class="card" id="id-stats-card" style="display:none;">
+              <h3>Đặc điểm của input</h3>
+              <div class="claims" id="id-stats"></div>
+            </div>
+          </div>
 
-        <div id="id-results-wrap" style="display:none;">
+          <div>
+            <div class="card" id="id-empty">
+              <h3>Kết quả phân tích</h3>
+              <p class="seg-note" style="margin:0;">Dán chuỗi vào ô bên trái — các khả năng nhận diện kèm bản giải mã thử sẽ hiện ở cột này, xếp theo độ tin cậy giảm dần. Bóc được một lớp, bấm “Dùng kết quả này làm input mới” ngay trong kết quả đó để phân tích tiếp lớp trong.</p>
+            </div>
+
+            <div id="id-results-wrap" style="display:none;">
           <h2 style="font-size:17px; margin:0 0 4px;">Khả năng nhận diện — <span id="id-count">0</span></h2>
           <p class="lede" style="margin-bottom:12px;">Xếp theo độ tin cậy giảm dần. “Độ tin cậy” là điểm heuristic từ cấu trúc chuỗi và việc giải mã thử có ra dữ liệu đọc được hay không — không phải xác suất tuyệt đối: hash và dữ liệu đã mã hoá thật (AES/RSA) về bản chất trông như ngẫu nhiên và không bóc được nếu thiếu khoá.</p>
-          <div class="detect-list" id="id-results"></div>
+              <div class="detect-list" id="id-results"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -2862,6 +2895,7 @@ function sha512Bytes(msg){
     var elIdStatsCard = document.getElementById("id-stats-card");
     var elIdStats = document.getElementById("id-stats");
     var elIdResultsWrap = document.getElementById("id-results-wrap");
+    var elIdEmpty = document.getElementById("id-empty");
     var elIdResults = document.getElementById("id-results");
     var elIdCount = document.getElementById("id-count");
 
@@ -3003,6 +3037,7 @@ function sha512Bytes(msg){
         elIdStatus.className = "status dim";
         elIdStatsCard.style.display = "none";
         elIdResultsWrap.style.display = "none";
+        elIdEmpty.style.display = "";
         return;
       }
       var compact = s.replace(/\s+/g, "");
@@ -3262,6 +3297,7 @@ function sha512Bytes(msg){
       elIdCount.textContent = results.length;
       elIdStatus.textContent = "Đã phân tích xong — khả năng cao nhất: " + results[0].name + " (" + results[0].conf + "%).";
       elIdStatus.className = "status ok";
+      elIdEmpty.style.display = "none";
       elIdResultsWrap.style.display = "";
 
       results.forEach(function (r) {
