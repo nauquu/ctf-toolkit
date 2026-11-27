@@ -56,8 +56,7 @@
       .panel{ display:none; }
       .panel.active{ display:block; }
 
-      h2{ font-size:19px; margin:0 0 4px; letter-spacing:-0.01em; }
-      .lede{ color:var(--muted); margin:0 0 16px; font-size:14px; max-width:110ch; }
+      h2{ font-size:19px; margin:0 0 14px; letter-spacing:-0.01em; }
 
       .card{
         background:var(--panel); border:1px solid var(--line-soft);
@@ -168,7 +167,6 @@
       .outrow{ display:flex; gap:8px; align-items:flex-start; }
       .outrow > *:first-child{ flex:1; min-width:0; }
       .hidden-input{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
-      .seg-note{ font-size:12.5px; color:var(--faint); margin-top:6px; }
       .divider{ border:none; border-top:1px solid var(--line-soft); margin:20px 0; }
 
       /* ---------- Bit planes (tab Giải mã ảnh) ---------- */
@@ -238,7 +236,6 @@
       <!-- ================= JWT WORKBENCH ================= -->
       <section class="panel active" id="panel-jwt" role="tabpanel">
         <h2>JWT Workbench</h2>
-        <p class="lede">Dán token vào là thấy ngay ba đoạn. Sửa JSON ở dưới thì token tự cập nhật, sửa token thì JSON tự cập nhật. Ký lại bằng khóa ngắn cỡ nào cũng được — không có luật độ dài tối thiểu nào ở đây.</p>
 
         <div class="cols2">
           <div class="col-stack">
@@ -268,7 +265,6 @@
               </div>
               <div class="status" id="jwt-action-status"></div>
               <div style="margin-top:8px;"><span class="badge none" id="jwt-verify-badge" style="display:none;"></span></div>
-              <p class="seg-note">“Giữ nguyên chữ ký cũ” ghép header/payload hiện tại với đoạn chữ ký của token gốc bạn dán vào lần đầu — đúng kiểu token bị sửa mà server không kiểm chứng.</p>
             </div>
           </div>
 
@@ -292,7 +288,6 @@
       <!-- ================= CRACKER / DÒ HASH TỔNG QUÁT ================= -->
       <section class="panel" id="panel-crack" role="tabpanel">
         <h2>Dò hash tổng quát</h2>
-        <p class="lede">Một bộ dò dùng chung wordlist cho hai kiểu đầu vào: token JWT HS256, hoặc hash thô dạng hex (MD5, SHA-1, SHA-256, SHA-512, NTLM). Mọi phép thử chạy ngay trong trình duyệt — máy chủ đích không nhận một request nào.</p>
 
         <div class="cols2">
           <div class="col-stack">
@@ -325,7 +320,7 @@
                   <option value="sha256">SHA-256</option>
                   <option value="sha512">SHA-512</option>
                 </select>
-                <div class="status dim" id="crack-hash-status">Dán hash vào — độ dài hex sẽ gợi ý thuật toán: 32 ký tự hex → MD5 hoặc NTLM (chọn tay để phân biệt), 40 → SHA-1, 64 → SHA-256, 128 → SHA-512.</div>
+                <div class="status dim" id="crack-hash-status">32 hex → MD5/NTLM · 40 → SHA-1 · 64 → SHA-256 · 128 → SHA-512.</div>
               </div>
             </div>
           </div>
@@ -362,14 +357,12 @@
               <button class="btn small" id="crack-found-use" type="button">Mang sang JWT Workbench để ký lại</button>
             </div>
           </div>
-          <p class="seg-note">Nói thẳng về tốc độ: bộ dò này chạy bằng JavaScript đơn luồng trong trình duyệt nên chậm hơn hashcat dùng GPU rất nhiều — hợp với wordlist vừa và nhỏ, hoặc để kiểm chứng nhanh vài nghìn ứng viên. Gặp hash nặng (bcrypt, sha512crypt…), wordlist lớn, hoặc cần thử theo rules/mask thì dùng mục <strong>Tạo lệnh hashcat</strong> để chạy bằng chương trình thật trên máy.</p>
         </div>
       </section>
 
       <!-- ================= TẠO LỆNH HASHCAT ================= -->
       <section class="panel" id="panel-hashcat" role="tabpanel">
         <h2>Tạo lệnh hashcat</h2>
-        <p class="lede">Trang này không chạy được hashcat thật (chương trình native cần GPU/OpenCL trên máy của bạn) — mục này sinh sẵn dòng lệnh đúng số mode để bạn dán vào terminal trong thư mục chứa <span class="mono">hashcat.exe</span>. Mặc định là tấn công từ điển (<span class="mono">-a 0</span>).</p>
 
         <div class="cols2">
           <div class="col-stack">
@@ -399,7 +392,6 @@
               <input type="text" id="hc-wordlist" class="mono" value="wordlist.txt" autocomplete="off" />
               <label class="flabel" for="hc-rules" style="margin-top:12px;">Tên file rules (tuỳ chọn, để trống nếu không dùng)</label>
               <input type="text" id="hc-rules" class="mono" placeholder="ví dụ: best64.rule" autocomplete="off" />
-              <p class="seg-note" id="hc-note">Với JWT HS256: file hash chứa nguyên token trên một dòng (chính là cách bạn đã chạy với token.txt và jwt.secrets.list). File hash và wordlist nên đặt cùng thư mục với hashcat.exe, hoặc ghi đường dẫn đầy đủ thay cho tên file.</p>
             </div>
           </div>
 
@@ -411,7 +403,6 @@
                 <textarea class="mono" id="hc-cmd" rows="3" readonly spellcheck="false"></textarea>
                 <button class="btn small" id="hc-copy" type="button">Sao chép</button>
               </div>
-              <p class="seg-note">Giải mã nhanh: <span class="mono">-m</span> là số mode của loại hash, <span class="mono">-a 0</span> là tấn công từ điển (thử lần lượt từng dòng wordlist), <span class="mono">-r</span> (nếu có) áp thêm file rules biến đổi từng từ. Trên Linux/macOS bỏ đuôi <span class="mono">.exe</span> và gọi <span class="mono">./hashcat</span> hoặc <span class="mono">hashcat</span> nếu đã cài vào PATH.</p>
             </div>
             <div class="card">
               <h3>Xem lại kết quả đã dò được</h3>
@@ -420,7 +411,6 @@
                 <textarea class="mono" id="hc-cmd-show" rows="3" readonly spellcheck="false"></textarea>
                 <button class="btn small" id="hc-copy-show" type="button">Sao chép</button>
               </div>
-              <p class="seg-note">hashcat lưu kết quả trúng vào “potfile” nên chạy lại thường không in lại đáp án — lệnh có <span class="mono">--show</span> này đọc potfile và in lại các cặp hash : mật khẩu đã dò được cho đúng loại hash và file hash đã chọn.</p>
             </div>
           </div>
         </div>
@@ -429,7 +419,6 @@
       <!-- ================= TRIAGE ================= -->
       <section class="panel" id="panel-triage" role="tabpanel">
         <h2>Triage file</h2>
-        <p class="lede">Kéo thả một file vào để xem nhanh: dung lượng, 16 byte đầu dạng hex, mã băm SHA-256 và các chuỗi ký tự in được trích từ file. File chỉ được đọc trong trình duyệt của bạn.</p>
 
         <div class="dropzone" id="triage-drop" role="button" tabindex="0" aria-label="Chọn file để triage">
           <strong>Thả file vào đây</strong>
@@ -463,7 +452,6 @@
       <!-- ================= CONVERTERS ================= -->
       <section class="panel" id="panel-conv" role="tabpanel">
         <h2>Chuyển đổi lặt vặt</h2>
-        <p class="lede">Base64 / Base64URL, Hex và máy tính HMAC-SHA256 — tất cả chạy realtime: gõ tới đâu, ô còn lại cập nhật tới đó, không cần bấm nút. Gõ ở ô mã hoá thì trang giải mã ngược lại ngay; dữ kiện đang gõ dở chưa hợp lệ sẽ chỉ hiện ghi chú nhẹ, không báo lỗi. Bố cục hai cột đặt Base64 và Hex cạnh nhau để chuyền kết quả qua lại khi phải convert nhiều tầng.</p>
 
         <div class="conv-grid">
         <div class="card">
@@ -525,7 +513,7 @@
             <div>
               <label class="flabel" for="hmac-msg">Thông điệp</label>
               <textarea class="mono" id="hmac-msg" rows="5" spellcheck="false" placeholder="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbmlzdHJhdG9yIn0"></textarea>
-              <div class="status dim">Kết quả tự tính lại ngay khi khóa hoặc thông điệp thay đổi.</div>
+              
             </div>
             <div>
               <label class="flabel" for="hmac-hex">Kết quả dạng hex</label>
@@ -547,7 +535,6 @@
       <!-- ================= GIẢI MÃ RSA ================= -->
       <section class="panel" id="panel-rsa" role="tabpanel">
         <h2>Giải mã RSA</h2>
-        <p class="lede">Tình huống quen thuộc trong CTF: file <span class="mono">.enc</span> là flag đã bị khoá bằng public key, còn private key moi được từ ảnh (stego) chính là chiếc chìa mở nó. Dán private key dạng PEM và nạp file <span class="mono">.enc</span> vào — mọi phép toán chạy ngay trong trình duyệt, khoá không rời khỏi máy bạn. Hỗ trợ khoá PKCS#1 (<span class="mono">BEGIN RSA PRIVATE KEY</span>) và PKCS#8 (<span class="mono">BEGIN PRIVATE KEY</span>).</p>
 
         <div class="cols2">
           <div class="col-stack">
@@ -559,7 +546,7 @@
                 <button class="btn small" id="rsa-key-file-btn" type="button">Nạp file khoá (.pem / .key)…</button>
                 <input class="hidden-input" type="file" id="rsa-key-file" accept=".pem,.key,.txt" />
               </div>
-              <div class="status dim" id="rsa-key-status">Chưa có khoá — dán khoá vào là trang tự nhận diện độ dài và thành phần.</div>
+              <div class="status dim" id="rsa-key-status">Chưa có khoá.</div>
             </div>
 
             <div class="card">
@@ -578,7 +565,6 @@
                   <option value="sha512">SHA-512</option>
                 </select>
               </div>
-              <p class="seg-note">Chưa biết padding nào? Cứ thử PKCS#1 v1.5 trước. Nếu báo lỗi “block không bắt đầu bằng 00 02” thì chuyển sang OAEP; bài nào mã hoá bằng <span class="mono">pow(m, e, n)</span> thuần, không qua thư viện, thì chọn “Không đệm”.</p>
             </div>
           </div>
 
@@ -598,7 +584,7 @@
                 <option value="hex">Hex</option>
                 <option value="base64">Base64</option>
               </select>
-              <label class="flabel" for="rsa-ct-text" style="margin-top:12px;">Hoặc dán bản mã dạng hex / Base64 (điền ô này thì nó được ưu tiên hơn file)</label>
+              <label class="flabel" for="rsa-ct-text" style="margin-top:12px;">Hoặc dán bản mã dạng hex / Base64 (ưu tiên hơn file)</label>
               <textarea class="mono" id="rsa-ct-text" rows="5" spellcheck="false" placeholder="a1b2c3… hoặc Base64…"></textarea>
             </div>
 
@@ -627,7 +613,6 @@
       <!-- ================= GIẢI MÃ ẢNH / STEGO ================= -->
       <section class="panel" id="panel-stego" role="tabpanel">
         <h2>Giải mã ảnh (Steganography)</h2>
-        <p class="lede">Bản thu gọn kiểu Aperi'Solve, chạy 100% trong trình duyệt: up ảnh lên là trang tự trích strings, đọc metadata (EXIF của JPEG, các chunk chữ của PNG), soi các lớp bit của từng kênh màu, thử trích dữ liệu giấu trong bit LSB và kiểm tra dữ liệu bị nối thêm sau điểm kết thúc hợp lệ của ảnh. Hỗ trợ PNG, JPEG, GIF, BMP, WebP.</p>
 
         <div class="dropzone" id="stego-drop" role="button" tabindex="0" aria-label="Chọn file ảnh để phân tích">
           <strong>Thả file ảnh vào đây</strong>
@@ -676,7 +661,6 @@
 
           <div class="card" style="margin-top:16px;">
             <h3>Lớp bit (bit planes) — bit 0 và bit 1 của từng kênh</h3>
-            <p class="seg-note" style="margin:0 0 12px;">Mỗi ô là một lớp bit: điểm ảnh trắng = bit đó bằng 1. Dữ liệu giấu LSB thường lộ ra ở lớp bit 0 dưới dạng nhiễu có cấu trúc, vệt chữ hoặc một vùng khác hẳn phần còn lại. Ảnh động (GIF) chỉ soi khung hình đầu tiên.</p>
             <div class="planes" id="st-planes"></div>
             <div class="status dim" id="st-planes-status"></div>
           </div>
@@ -721,7 +705,6 @@
       <!-- ================= CUPP / TẠO WORDLIST THEO HỒ SƠ ================= -->
       <section class="panel" id="panel-cupp" role="tabpanel">
         <h2>CUPP — Tạo wordlist theo hồ sơ</h2>
-        <p class="lede">Bản port chạy trong trình duyệt của <a href="https://github.com/Mebus/cupp" target="_blank" rel="noopener" style="color:var(--accent);">CUPP (Common User Passwords Profiler)</a> — công cụ sinh từ điển mật khẩu từ thông tin cá nhân của một người: tên, ngày sinh, tên bạn đời / con / thú cưng, công ty, từ khoá riêng. Trang này bám đúng thuật toán của <span class="mono">cupp.py</span>: chế độ <span class="mono">-i</span> (hỏi hồ sơ rồi sinh) và <span class="mono">-w</span> (nâng cấp một wordlist có sẵn), với các mặc định lấy từ <span class="mono">cupp.cfg</span> — năm 1990–2022, ký tự đặc biệt <span class="mono">! @ '#' $ % &amp; *</span> (đúng các token cupp.cfg định nghĩa — kể cả token <span class="mono">'#'</span> nguyên dấu nháy, hệ quả của cách file cấu hình được đọc), số 0–100, leet <span class="mono">a→4 i→1 e→3 t→7 o→0 s→5 g→9 z→2</span>, lọc độ dài &gt;5 và &lt;12. Mọi thứ sinh ngay trên máy bạn, không gửi đi đâu.</p>
 
         <div class="card">
           <h3>Chế độ</h3>
@@ -775,9 +758,8 @@
                 <input type="text" id="cupp-pet" class="mono" autocomplete="off" placeholder="ví dụ: rex" />
                 <label class="flabel" for="cupp-company" style="margin-top:12px;">Tên công ty (Company)</label>
                 <input type="text" id="cupp-company" class="mono" autocomplete="off" placeholder="ví dụ: acme" />
-                <label class="flabel" for="cupp-words" style="margin-top:12px;">Từ khoá riêng về người này (cách nhau bằng dấu phẩy, khoảng trắng sẽ bị xoá — như bản gốc)</label>
+                <label class="flabel" for="cupp-words" style="margin-top:12px;">Từ khoá riêng (cách nhau bằng dấu phẩy)</label>
                 <input type="text" id="cupp-words" class="mono" autocomplete="off" placeholder="ví dụ: hacker,juice,black" />
-                <p class="seg-note">Đúng như bản gốc: mọi trường đều được hạ về chữ thường, và trang tự thêm biến thể viết hoa chữ đầu (John, Doe…) cùng dạng đảo ngược (nhoj…) vào quá trình tổ hợp.</p>
               </div>
             </div>
           </div>
@@ -790,19 +772,19 @@
               <button class="btn" id="cupp-imp-file-btn" type="button">Nạp file wordlist…</button>
               <input class="hidden-input" type="file" id="cupp-imp-file" accept=".txt,.list,.dic,text/plain" />
             </div>
-            <label class="flabel" for="cupp-imp-text">Hoặc dán các từ gốc (mỗi dòng một từ, hoặc cách nhau bằng khoảng trắng — bản gốc tách theo khoảng trắng)</label>
+            <label class="flabel" for="cupp-imp-text">Hoặc dán các từ gốc (mỗi dòng một từ)</label>
             <textarea class="mono" id="cupp-imp-text" rows="8" spellcheck="false" placeholder="football&#10;dragon&#10;sunshine"></textarea>
             <div class="status dim" id="cupp-imp-status">Chưa có từ gốc nào.</div>
             <label class="checkline">
               <input type="checkbox" id="cupp-imp-concat" />
-              Ghép mọi từ với mọi từ (concatenate) — bản gốc cảnh báo: N từ sinh N×N tổ hợp, trên 200 từ là đã nặng (threshold trong cupp.cfg)
+              Ghép mọi từ với mọi từ (N×N tổ hợp)
             </label>
           </div>
         </div>
 
         <div class="cols2" style="margin-top:16px;">
           <div class="card">
-            <h3>Tuỳ chọn sinh (các câu hỏi Y/N của bản gốc)</h3>
+            <h3>Tuỳ chọn sinh</h3>
             <label class="checkline">
               <input type="checkbox" id="cupp-specs" />
               Thêm ký tự đặc biệt vào cuối từ (mọi tổ hợp 1–3 ký tự)
@@ -813,29 +795,27 @@
             </label>
             <label class="checkline">
               <input type="checkbox" id="cupp-leet" />
-              Leet mode (leet → 1337): nhân đôi danh sách bằng biến thể leet
+              Leet mode (leet → 1337)
             </label>
             <label class="checkline">
               <input type="checkbox" id="cupp-lenfilter" checked />
-              Lọc độ dài kiểu cupp.cfg (chỉ giữ từ dài hơn wcfrom và ngắn hơn wcto)
+              Lọc độ dài (wcfrom – wcto)
             </label>
-            <p class="seg-note">Cách CUPP tổ hợp, tóm tắt: mỗi nhóm tên (người chính / bạn đời / con) tự ghép đôi với nhau, rồi ghép tiếp với mọi mảnh ngày sinh (yy, yyyy, dd, mm và các tổ hợp 2–3 mảnh, có và không có dấu <span class="mono">_</span>), với từng năm trong danh sách năm, với số chạy và với ký tự đặc biệt; từ khoá, thú cưng, công ty và tên đảo ngược cũng đi qua cùng các phép ghép đó.</p>
           </div>
 
           <div class="card">
             <h3>Cấu hình (mặc định = cupp.cfg)</h3>
             <label class="flabel" for="cupp-years">Danh sách năm (cách nhau bằng dấu phẩy)</label>
             <textarea class="mono" id="cupp-years" rows="3" spellcheck="false">1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022</textarea>
-            <label class="flabel" for="cupp-chars" style="margin-top:12px;">Ký tự đặc biệt (các token cách nhau bằng dấu phẩy, đúng định dạng cupp.cfg)</label>
+            <label class="flabel" for="cupp-chars" style="margin-top:12px;">Ký tự đặc biệt (cách nhau bằng dấu phẩy)</label>
             <input type="text" id="cupp-chars" class="mono" autocomplete="off" value="!,@,'#',$,%,&amp;,*" />
-            <p class="seg-note">Token <span class="mono">'#'</span> giữ nguyên cả dấu nháy như bản gốc: trong cupp.cfg nó được ghi là <span class="mono">'#'</span> và chương trình đọc thẳng token đó vào danh sách ký tự đặc biệt. Muốn dùng ký tự <span class="mono">#</span> trần thì sửa token thành <span class="mono">#</span>.</p>
             <div class="grid2" style="gap:12px; margin-top:12px;">
               <div>
                 <label class="flabel" for="cupp-numfrom">Số bắt đầu (from)</label>
                 <input type="text" id="cupp-numfrom" class="mono" autocomplete="off" inputmode="numeric" value="0" />
               </div>
               <div>
-                <label class="flabel" for="cupp-numto">Số kết thúc (to, không gồm số này — range của Python)</label>
+                <label class="flabel" for="cupp-numto">Số kết thúc (to)</label>
                 <input type="text" id="cupp-numto" class="mono" autocomplete="off" inputmode="numeric" value="100" />
               </div>
               <div>
@@ -858,23 +838,21 @@
             <button class="btn" id="cupp-copy" type="button" disabled>Sao chép</button>
             <button class="btn" id="cupp-tocrack" type="button" disabled>Đưa sang tab Dò hash</button>
           </div>
-          <div class="status dim" id="cupp-status">Điền hồ sơ rồi bấm “Tạo wordlist”. Kết quả được khử trùng lặp và sắp xếp A→Z, đúng như file CUPP ghi ra.</div>
+          <div class="status dim" id="cupp-status">Chưa tạo wordlist.</div>
           <label class="flabel" for="cupp-out" style="margin-top:12px;">Wordlist đã tạo — <span id="cupp-count">0</span> từ</label>
           <textarea class="mono" id="cupp-out" rows="14" readonly spellcheck="false" placeholder="Wordlist sẽ hiện ở đây…"></textarea>
-          <p class="seg-note">File tải về ở chế độ hồ sơ được đặt tên <span class="mono">&lt;tên&gt;.txt</span> như bản gốc; ở chế độ nâng cấp là <span class="mono">wordlist.cupp.txt</span>. Wordlist lớn (trên 100.000 từ) chỉ hiển thị 100.000 dòng đầu ở ô trên — nút tải và nút đưa sang Dò hash vẫn dùng toàn bộ danh sách.</p>
         </div>
       </section>
 
       <!-- ================= PHÂN TÍCH INPUT / ĐOÁN LOẠI MÃ HOÁ ================= -->
       <section class="panel" id="panel-identify" role="tabpanel">
         <h2>Phân tích input — đoán loại mã hoá / chuyển đổi</h2>
-        <p class="lede">Dán bất kỳ chuỗi lạ nào vào — một đoạn hash, một cục Base64, token, dãy nhị phân, Morse, chuỗi bị mã hoá nhiều lớp… — trang sẽ soi cấu trúc của nó (bảng ký tự, độ dài, dấu hiệu định dạng, entropy), xếp hạng các khả năng từ chắc chắn nhất xuống, và <strong>thử giải mã thật</strong> từng khả năng để bạn xem trước kết quả. Gặp mã hoá lồng nhau, bấm “Dùng kết quả này làm input mới” ở lớp vừa bóc để bóc tiếp lớp trong. Bố cục hai cột: input và đặc điểm nằm cố định ở cột trái, kết quả ở cột phải — bóc hết lớp này sang lớp khác mà không phải cuộn trang. Mọi phân tích chạy ngay khi gõ, 100% trong trình duyệt.</p>
 
         <div class="cols2 start">
           <div class="col-stack id-side">
             <div class="card">
               <label class="flabel" for="id-input">Input cần phân tích</label>
-          <textarea class="mono" id="id-input" rows="7" spellcheck="false" placeholder="Dán chuỗi cần nhận diện vào đây — ví dụ: ZmxhZ3toZWxsb30= , 666c6167 , eyJhbGciOi… , ..-. .-.. .- --. , 01100110 01101100…"></textarea>
+          <textarea class="mono" id="id-input" rows="7" spellcheck="false" placeholder="Dán chuỗi cần nhận diện vào đây…"></textarea>
           <div class="sample-row" aria-label="Dữ kiện mẫu để thử nhanh">
             <span style="font-size:13px; color:var(--faint); align-self:center;">Thử nhanh:</span>
             <button class="btn small" type="button" data-id-sample="b64">Base64</button>
@@ -899,12 +877,11 @@
           <div>
             <div class="card" id="id-empty">
               <h3>Kết quả phân tích</h3>
-              <p class="seg-note" style="margin:0;">Dán chuỗi vào ô bên trái — các khả năng nhận diện kèm bản giải mã thử sẽ hiện ở cột này, xếp theo độ tin cậy giảm dần. Bóc được một lớp, bấm “Dùng kết quả này làm input mới” ngay trong kết quả đó để phân tích tiếp lớp trong.</p>
+              <div class="status dim" style="margin:0;">Chưa có kết quả.</div>
             </div>
 
             <div id="id-results-wrap" style="display:none;">
-          <h2 style="font-size:17px; margin:0 0 4px;">Khả năng nhận diện — <span id="id-count">0</span></h2>
-          <p class="lede" style="margin-bottom:12px;">Xếp theo độ tin cậy giảm dần. “Độ tin cậy” là điểm heuristic từ cấu trúc chuỗi và việc giải mã thử có ra dữ liệu đọc được hay không — không phải xác suất tuyệt đối: hash và dữ liệu đã mã hoá thật (AES/RSA) về bản chất trông như ngẫu nhiên và không bóc được nếu thiếu khoá.</p>
+          <h2 style="font-size:17px; margin:0 0 12px;">Khả năng nhận diện — <span id="id-count">0</span></h2>
               <div class="detect-list" id="id-results"></div>
             </div>
           </div>
@@ -1395,7 +1372,7 @@ function sha512Bytes(msg){
     function updateHashStatus() {
       var h = crackCleanHash();
       if (!h) {
-        elCrackHashStatus.textContent = "Dán hash vào — độ dài hex sẽ gợi ý thuật toán: 32 ký tự hex → MD5 hoặc NTLM (chọn tay để phân biệt), 40 → SHA-1, 64 → SHA-256, 128 → SHA-512.";
+        elCrackHashStatus.textContent = "32 hex → MD5/NTLM · 40 → SHA-1 · 64 → SHA-256 · 128 → SHA-512.";
         elCrackHashStatus.className = "status dim"; return;
       }
       if (!/^[0-9a-f]+$/.test(h)) {
