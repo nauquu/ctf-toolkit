@@ -653,6 +653,28 @@
             <div class="img-meta" id="st-orig-meta"></div>
           </div>
 
+          <div class="card" id="st-ocr-card" style="display:none;">
+            <h3>OCR — Text in Image</h3>
+            <label class="flabel" for="st-ocr-lang">Language</label>
+            <select id="st-ocr-lang">
+              <option value="eng" selected>English</option>
+              <option value="vie">Vietnamese</option>
+              <option value="eng+vie">English + Vietnamese</option>
+            </select>
+            <div class="btnrow">
+              <button class="btn primary" id="st-ocr-btn" type="button">Run OCR</button>
+            </div>
+            <div style="margin-top:12px;">
+              <progress id="st-ocr-progress" value="0" max="100"></progress>
+              <div class="status dim" id="st-ocr-status">Not run yet.</div>
+            </div>
+            <label class="flabel" for="st-ocr-text" style="margin-top:12px;">Recognized text</label>
+            <div class="outrow">
+              <textarea class="mono" id="st-ocr-text" rows="7" readonly spellcheck="false" placeholder="Text found in the image appears here…"></textarea>
+              <button class="btn small" id="st-ocr-copy" type="button">Copy</button>
+            </div>
+          </div>
+
           <div class="cols2">
             <div class="card">
               <h3>Overview</h3>
@@ -2332,7 +2354,7 @@ function sha512Bytes(msg){
       return -1;
     }
     /* ---------- Stego: nạp file, điều phối các phân tích ---------- */
-    var stBytes = null, stCanvas = null, stAppended = null, stFileName = "";
+    var stBytes = null, stCanvas = null, stAppended = null, stFileName = "", stOcrBlob = null;
 
     var elStegoDrop = document.getElementById("stego-drop");
     var elStegoFile = document.getElementById("stego-file");
@@ -2400,7 +2422,8 @@ function sha512Bytes(msg){
         document.getElementById("st-lsb-text").value || "",
         document.getElementById("st-lsb-strings").textContent || "",
         document.getElementById("st-appended-strings").textContent || "",
-        document.getElementById("st-sh-text").value || ""
+        document.getElementById("st-sh-text").value || "",
+        document.getElementById("st-ocr-text").value || ""
       ].join("\n");
       var m = hay.match(/[A-Za-z0-9_]{1,40}\{[^\s{}]{1,300}\}/);
       var box = document.getElementById("st-flag-box");
@@ -2432,6 +2455,8 @@ function sha512Bytes(msg){
         document.getElementById("st-head").textContent = headHexSpaced(stBytes, 16) || "(empty file)";
         document.getElementById("st-dims").textContent = "reading…";
         resetSteghideUi();
+        stOcrBlob = new Blob([stBytes], { type: file.type || "application/octet-stream" });
+        resetOcrUi(fmt);
 
         // Strings trên dữ liệu thô
         var strings = extractStrings(stBytes, 4);
@@ -2645,6 +2670,92 @@ function sha512Bytes(msg){
       stringsEl.textContent = lsbStrings.slice(0, 500).join("\n") + (lsbStrings.length > 500 ? "\n… (showing first 500 strings)" : "") || "(no printable strings in LSB stream)";
       scanFlagInStego();
     }
+
+    /* ============================================================
+       OCR — Tesseract.js, lazy-loaded from CDN on first use and run
+       entirely in the browser (nothing is uploaded anywhere). The
+       script, WASM core and language data are fetched by the library
+       itself the first time OCR runs; later runs reuse them.
+       ============================================================ */
+    var ocrLibPromise = null, ocrRunning = false;
+
+    function resetOcrUi(fmt) {
+      var card = document.getElementById("st-ocr-card");
+      card.style.display = (fmt && fmt !== "Unknown") ? "" : "none";
+      document.getElementById("st-ocr-text").value = "";
+      document.getElementById("st-ocr-progress").value = 0;
+      var st = document.getElementById("st-ocr-status");
+      st.textContent = "Not run yet.";
+      st.className = "status dim";
+      document.getElementById("st-ocr-btn").disabled = false;
+    }
+    function loadTesseract() {
+      if (window.Tesseract) return Promise.resolve(window.Tesseract);
+      if (ocrLibPromise) return ocrLibPromise;
+      ocrLibPromise = new Promise(function (resolve, reject) {
+        var s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+        s.onload = function () {
+          if (window.Tesseract) resolve(window.Tesseract);
+          else { ocrLibPromise = null; reject(new Error("OCR library failed to initialize.")); }
+        };
+        s.onerror = function () {
+          ocrLibPromise = null;
+          reject(new Error("Could not load the OCR engine — it is fetched online on first use, so check the network connection."));
+        };
+        document.head.appendChild(s);
+      });
+      return ocrLibPromise;
+    }
+    document.getElementById("st-ocr-btn").addEventListener("click", function () {
+      if (ocrRunning || !stOcrBlob) return;
+      var btn = this;
+      var status = document.getElementById("st-ocr-status");
+      var prog = document.getElementById("st-ocr-progress");
+      var out = document.getElementById("st-ocr-text");
+      var lang = document.getElementById("st-ocr-lang").value;
+      ocrRunning = true;
+      btn.disabled = true;
+      out.value = "";
+      prog.value = 0;
+      status.textContent = "Loading OCR engine…";
+      status.className = "status dim";
+      loadTesseract().then(function (T) {
+        return T.recognize(stOcrBlob, lang, {
+          logger: function (m) {
+            if (!m || !m.status) return;
+            if (m.status === "recognizing text") {
+              prog.value = Math.round((m.progress || 0) * 100);
+              status.textContent = "Recognizing text… " + prog.value + "%";
+            } else {
+              status.textContent = m.status.charAt(0).toUpperCase() + m.status.slice(1) + "…";
+            }
+          }
+        });
+      }).then(function (res) {
+        var text = (res && res.data && res.data.text) ? res.data.text.trim() : "";
+        out.value = text;
+        prog.value = 100;
+        if (text) {
+          var conf = (res.data && typeof res.data.confidence === "number") ? Math.round(res.data.confidence) : null;
+          status.textContent = text.length.toLocaleString("en-US") + " characters" + (conf !== null ? " · confidence " + conf + "%" : "");
+          status.className = "status ok";
+        } else {
+          status.textContent = "No text found in this image.";
+          status.className = "status dim";
+        }
+        scanFlagInStego();
+      }).catch(function (e) {
+        status.textContent = (e && e.message) || "OCR failed.";
+        status.className = "status err";
+      }).finally(function () {
+        ocrRunning = false;
+        btn.disabled = false;
+      });
+    });
+    document.getElementById("st-ocr-copy").addEventListener("click", function () {
+      copyText(document.getElementById("st-ocr-text").value, this);
+    });
 
     /* ============================================================
        Steghide extraction — a browser port of steghide 0.5.1's
