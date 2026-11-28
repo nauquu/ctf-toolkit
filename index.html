@@ -4268,6 +4268,16 @@ function sha512Bytes(msg){
             setTimeout(function () { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 400);
           }); })(r.decodedBytes, r.fileName);
           btnRow.appendChild(dlBtn);
+          if (imgInfo) {
+            var stBtn = document.createElement("button");
+            stBtn.className = "btn small"; stBtn.type = "button"; stBtn.textContent = "Send to Image Steganography";
+            (function (bytes, fname, mime) { stBtn.addEventListener("click", function () {
+              var file = new File([bytes], fname, { type: mime });
+              document.querySelector('[data-tab="stego"]').click();
+              loadStego(file);
+            }); })(r.decodedBytes, r.fileName || ("decoded." + imgInfo.ext), imgInfo.mime);
+            btnRow.appendChild(stBtn);
+          }
         }
         if (r.action) {
           hasBtn = true;
